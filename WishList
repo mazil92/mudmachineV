@@ -1,0 +1,150 @@
+/* Wish List
+By Mazil
+
+-----------------------------------------------
+BIG changes
+
+- 8 new Classes
+- 8 Abilities per class
+- Avatar/Remort command at level 25
+- 7 new Races
+- Race Abilities
+- 4 new Realms
+- 7 levels of Spells
+- 14 spells per realm
+- Rare item / artifact / relic system
+- Deity Worship
+
+----------------------------------------------
+HUGE CHANGES
+
+- Saving throws?
+
+- AI characters?
+- fishing, farming, housing ?
+- stockmarket/trade system ?
+
+--------------------------------------------
+
+smaller changes:
+
+-remove stat bonuses and use a stat formula/multiplier based on the absolute number
+-add realms and proficiencies to more ability checks
+-remove hard caps of most skill success probabilities
+-remove some class-exclusive utility abilties eg. scout and sneak. For example, every class can search, but rangers and druids just do it better.
+Make this true for Scout and Sneak
+-Give druid scout, for Christ's sake. 
+-remove some class-exclusive spells and make them available for all. EG remove-disease, cure-blind, track, room-vigor, fortune, etc.
+-add existing spells into realms and give them a way to gain proficiency
+-give every class some form of level multiplier on their heals, realms, and weapon damage
+-rebalance exp requirements for each level
+
+-more know-aura info (more ac info, more alignment info, etc)
+-more Detect-Magic info
+-goldshare
+-exp for healing
+-implement the guild system already in place
+-add guild abilties
+
+-------------------------------------------------
+SCOPE OF PROJECT:
+
+Add 8 custom classes for a total of 20 playable classes
+Add 7 custom races for a total of 20 playable races
+Implement the 4 unused realms for a total of 8 realms
+Implement 7 levels of spell per realm with 2 spells per realm per level (112 spells)
+Have 8 abilities per race (One ability every three levels plus a remort/avatar command at level 25)
+
+----------------------------------------------------------
+DETAILS
+
+SPELLS: 
+EARTH                   WIND                  FIRE                  WATER
+1: Rumble               1: Hurt               1: Burn               1: Blister
+2: Crush                2: Dustgust           2: Fireball           2: Waterbolt
+2: Rock-Armor           2: Detect-Realms      2: Forging-Flames     2: Cleanse  
+3: Shatterstone         3: Shockbolt          3: Burstflame         3: Steamblast
+3: Stone-Shield         3: Resist-Cold        3: Resist-Fire        3: Breathe-Water
+4: Engulf               4: Lightning          4: Immolate           4: Bloodboil
+4: Earth-Endure         4: Wind-Endure        4: Fireshield         4: Water-Bubble
+5: Earthquake           5: Thunderbolt        5: Flamefill          5: Iceblade
+5: Stone-Weapon         5: Zapping-Strikes    5: Warmth             5: Freeze
+6: Tremor               6: Tornado            6: Incinerate         6: Flood
+6: Seismic-Sense        6: (WIND UTILITY)     6: Mana-Burn          6: Chilling-Touch
+7: Attune-Earth         7: Attune-Wind        7: Attune-Fire        7: Attune-Water  
+
+LIFE                    ENCHANTMENT           ARCANA                SORCERY
+1: Vigor                1: Know-Aura          1: Light              1: Fumble
+2: Mend                 2: Bless              2: Levitate           2: Stun
+2: Curepoison           2: Protect            2: Magic-Missile      2: ??
+3: Room-Vigor           3: Detect-Magic       3: Fly                3: Drain
+3: Remove-Disease       3: Detect-Invisible   3: Arcane-Missile     3: Cripple
+4: Soothe               4: Detect-Relics      4: Invisibility       4: Curse
+4: Cure-Blind           4: Remove-Curse       4: Teleport           4: Blind
+5: Lifelink             5: Honed-Edge         5: Arcane-Storm       5: Silence
+5: Banishing-Light      5: Clairvoyance       5: Summon             5: Leech
+6: Heal                 6: Enchant-Weapon     6: Track              6: Resist-Magic
+6: Tether               6: Conjure            6: Word-of-Recall     6: Mass-Siphon
+7: Revival              7: Divine-Weapon      7: Mass-Portal        7: Mass-Cripple
+
+
+---------------------------------------------------------------------------------------
+CLASSES
+
+BARBARIAN             FIGHTER              DEATH-KNIGHT        WEREWOLF
+01: Combat-Sense      01: ???              01: Evil Bonus      01: ???
+04: Bash              04: Bash             04: (hp on kill)    04: ???
+07: Circle            07: Circle           07: Riposte         07: ???
+10: Berserk           10: ???              10: +dmg @ low hp   10: ???
+13: Battlecry         13: ???              13: ???             13: ???
+16: Whirlwind         16: Overwhelm        16: ???             16: ???
+19: Taunt             19: ???              19: ???             19: ???
+22: ???               22: ???              22: Magic-Reflect   22: ???
+25: Remort/Avatar     25: Remort/Avatar    25: Remort/Avatar   25: Remort/Avatar 
+
+ASSASSIN              THIEF                RANGER              DRUID
+01: ???               01: ???              01: ???             01: Poison Immune
+04: Pick              04: Pick             04: Track           04: Track
+07: Dodge             07: Peek/Steal       07: ???             07: Barkskin
+10: Backstab          10: Backstab         10: Haste           10: Thornskin
+13: Evade             13: Dual-Wield       13: ???             13: Bear-Heart
+16: Envenom-Weapon    16: Throw            16: ???             16: Scavenging-Sense
+19: ???               19: Disguise         19: ???             19: ???
+22: ???               22: Disarm           22: ???             22: ???
+25: Remort/Avatar     25: Remort/Avatar    25: Remort/Avatar   25: Remort/Avatar
+
+MONK                  ALCHEMIST            ???                 ???
+01: Unarmed-Strike    01: Detect-Magic     01: ???             01:
+04: Meditate          04: Transmute        04: ???             04:
+07: ???               07: Recharge         07: ???             07:
+10: Touch of Death    10: Enchant          10: ???             10:
+13: Grapple           13: Midas            13: ???             13:
+16: Flaming Fists     16: Gold/MP convert  16: ???             16:
+19: ???               19: Haste for spells 19: ???             19:
+22: ???               22: ???              22: ???             22:
+25: Remort/Avatar     25: Remort/Avatar    25: Remort/Avatar   25: Remort/Avatar
+
+MAGE                  BARD                 VAMPIRE             ????
+01: Teach             01: ???              01: ???             01:
+04: ????              04: Sing             04: (hp on damage)  04:
+07: ??????            07: Charm            07: ???             07:
+10: Enchant           10: Bless-Song       10: ???             10:
+13: +int like pray    13: Protect-Song     13: ???             13:
+16: reduce mp cost    16: Haste-Song       16: ???             16:
+19: ?????             19: Damage-Song      19: ???             19:
+22: ???               22: Hazy-Song        22: ???             22:
+25: Remort/Avatar     25: Remort/Avatar    25: Remort/Avatar   25: Remort/Avatar 
+
+PALADIN               CLERIC               LICH                WARLOCK
+01: Good-Bonus        01: ???              01: ???             01:
+04: Pray              04: Pray             04: ???             04:
+07: Turn              07: Turn             07: ???             07:
+10: ???               10: ???              10: ???             10:
+13: ???               13: ???              13: ???             13:
+16: ???               16: ???              16: ???             16:
+19: ???               19: ???              19: ???             19:
+22: ???               22: Sanctuary        22: ???             22:
+25: Remort/Avatar     25: Remort/Avatar    25: Remort/Avatar   25: Remort/Avatar
+
+
+*/
