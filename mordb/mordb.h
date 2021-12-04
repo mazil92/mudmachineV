@@ -287,6 +287,7 @@
 #define MCONJU		58	/* monster has been conjured */
 #define MTEAMM		59	/* monster is a member of an attack group */
 #define MTEAML		60	/* monster is the leader of an attack group */
+#define MMIDAS		61	/* monster has been midas touched by an alchemist and will drop more gold on death*/
 
 /* Object flags */
 #define OPERMT          0       /* Permanent item (not yet taken) */
@@ -471,9 +472,9 @@
 #define WIND            2
 #define FIRE            3
 #define WATER           4
-#define	DETECT		5
-#define PROTECT		6
-#define	CLERICAL	7
+#define	LIFE		5
+#define ENCHANTMENT	6
+#define	ARCANA		7
 #define	SORCERY		8
 
 /* Daily use variables */
@@ -535,6 +536,7 @@
 #define LT_CHARM	43		/* last time you charmed */
 #define LT_MSCAV       	44
 #define LT_CONJU	45
+#define LT_MIDAS	46		/* last time you used MIDAS */
 
 #define F_ISSET(p,f)    (((p)->flags[(f)/8] & 1<<((f)%8)) ? 1 : 0 )
 #define F_SET(p,f)      ((p)->flags[(f)/8] |= 1<<((f)%8))

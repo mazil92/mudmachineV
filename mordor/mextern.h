@@ -10,6 +10,8 @@
  *
  * $Log: mextern.h,v $
  *
+ * 04/12/2021 added midas command from smithycommand1.c
+ *
  * Revision 6.28  2021/09/25 03:00:00  develop
  * added tnl, hp and mp function declarations
  *
@@ -240,7 +242,8 @@ extern char guilds[][30];
 typedef int (*SPELLFN)();
 
 
-
+/* smithycommand1.c */
+extern int midas(creature *ply_ptr, cmd *cmnd);
 
 /* ACCESS.C */
 extern char *get_spell_name( int nIndex );
