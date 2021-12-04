@@ -8,6 +8,9 @@
  * $Id: creature.c,v 6.19.1.4 2001/07/26 01:40:07 develop Exp $
  *
  * $Log: creature.c,v $
+ *
+ * 04/12/2021: changed gold drop formula for creatures in they were under the MIDAS flag
+ *
  * Revision 6.19.1.4  2001/07/26 01:40:07  develop
  * fixed bug in is_stolen_crt that would crash if fd < 0
  *
@@ -595,6 +598,15 @@ void die(creature *crt_ptr, creature *att_ptr )
                 strcat(str, ", ");
             strcat(str, obj_ptr->name);
             obj_ptr->value = crt_ptr->gold;
+            add_obj_rom(obj_ptr, crt_ptr->parent_rom);
+	    }
+	if(crt_ptr->gold && F_ISSET(crt_ptr, MMIDAS)) {
+            if(load_obj(0, &obj_ptr) >= 0) {
+            sprintf(obj_ptr->name, "%ld bonus gold coins", 4*crt_ptr->gold);
+            if(i)
+                strcat(str, ", ");
+            strcat(str, obj_ptr->name);
+            obj_ptr->value = 4*crt_ptr->gold;
             add_obj_rom(obj_ptr, crt_ptr->parent_rom);
 	    }
         }
