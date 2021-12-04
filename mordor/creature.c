@@ -600,7 +600,9 @@ void die(creature *crt_ptr, creature *att_ptr )
             obj_ptr->value = crt_ptr->gold;
             add_obj_rom(obj_ptr, crt_ptr->parent_rom);
 	    }
+
 	if(crt_ptr->gold && F_ISSET(crt_ptr, MMIDAS)) {
+
             if(load_obj(0, &obj_ptr) >= 0) {
             sprintf(obj_ptr->name, "%ld bonus gold coins", 4*crt_ptr->gold);
             if(i)
