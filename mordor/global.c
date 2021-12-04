@@ -8,7 +8,9 @@
  *
  * $Log: global.c,v $
  *
- * 
+ *
+ * 04/12/2021: Added midas command
+ *
  * Revision 6.31  2021/09/25 03:00:00  develop
  * added tnl, hp and mp commands to cmnd struct
  *
@@ -829,6 +831,7 @@ struct {
 	{ "*stolen", 171, dm_stolen },
 	{ "push", -2, 0 },
 	{ "press", -2, 0 },
+	{ "midas", 172, midas},
 	{ "@", 0, 0 }
 };
 
