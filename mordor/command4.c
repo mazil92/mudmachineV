@@ -390,8 +390,17 @@ int info( creature *ply_ptr, cmd *cmnd )
 	output(fd, g_buffer);
 	sprintf(g_buffer, "Fire:   %3d%%   ", mprofic(ply_ptr, FIRE));
 	output(fd, g_buffer);
-	sprintf(g_buffer, "Water:  %3d%%               \n", mprofic(ply_ptr, WATER));
+	sprintf(g_buffer, "Water:  %3d%%   \n", mprofic(ply_ptr, WATER));
 	output(fd, g_buffer);
+	sprintf(g_buffer, "Life:   %3d%%	", mprofic(ply_ptr, LIFE));
+	output(fd, g_buffer);
+	sprintf(g_buffer, "Enchantment: %3d%%	", mprofic(ply_ptr, ENCHANTMENT));
+	output(fd, g_buffer);
+	sprintf(g_buffer,"Arcana:  %3d%%	", mprofic(ply_ptr, ARCANA));
+	output(fd, g_buffer);
+	sprintf(g_buffer, "Sorcery:  %3d%%		\n", mprofic(ply_ptr, SORCERY));
+	output(fd, g_buffer);
+
 	
 	F_SET(ply_ptr, PREADI);
 	ask_for(fd, "[Hit Return, Q to quit]: ");
