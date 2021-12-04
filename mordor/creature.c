@@ -8,9 +8,6 @@
  * $Id: creature.c,v 6.19.1.4 2001/07/26 01:40:07 develop Exp $
  *
  * $Log: creature.c,v $
- *
- * 04/12/2021: changed gold drop formula for creatures in they were under the MIDAS flag
- *
  * Revision 6.19.1.4  2001/07/26 01:40:07  develop
  * fixed bug in is_stolen_crt that would crash if fd < 0
  *
@@ -472,6 +469,7 @@ void die(creature *crt_ptr, creature *att_ptr )
     time_t	i, t;
     double	lost_fraction;
     int     	n, dr, levels = 0, expdiv, wielding=0, exp, guildscore;
+    int gold_multiplier = 1;
 
     /* assume we lose profiecency */
     int		lose_prof = 1;
@@ -589,28 +587,19 @@ void die(creature *crt_ptr, creature *att_ptr )
 		add_obj_rom(obj_ptr, crt_ptr->parent_rom);
             }
 	    op = temp;
-        }
+    }
 
         if(crt_ptr->gold) {
+            if(F_ISSET(crt_ptr, MMIDAS))
+                gold_multiplier = 5;
             if(load_obj(0, &obj_ptr) >= 0) {
-            sprintf(obj_ptr->name, "%ld gold coins", crt_ptr->gold);
+            sprintf(obj_ptr->name, "%ld gold coins", gold_multiplier*crt_ptr->gold);
             if(i)
                 strcat(str, ", ");
             strcat(str, obj_ptr->name);
             obj_ptr->value = crt_ptr->gold;
             add_obj_rom(obj_ptr, crt_ptr->parent_rom);
-	    }
-
-	if(crt_ptr->gold && F_ISSET(crt_ptr, MMIDAS)) {
-
-            if(load_obj(0, &obj_ptr) >= 0) {
-            sprintf(obj_ptr->name, "%ld bonus gold coins", 4*crt_ptr->gold);
-            if(i)
-                strcat(str, ", ");
-            strcat(str, obj_ptr->name);
-            obj_ptr->value = 4*crt_ptr->gold;
-            add_obj_rom(obj_ptr, crt_ptr->parent_rom);
-	    }
+	       }
         }
 	
 

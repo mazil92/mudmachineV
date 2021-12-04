@@ -91,7 +91,7 @@ int midas( creature *ply_ptr, cmd *cmnd )
 
   
 	/*Chance is based on raw con, player/enemy level, and your enchantment proficiency */
-  chance = (int)((ply_ptr->level - crt_ptr->level)*20+ply_ptr->constitution*2+mprofic(ply_ptr, realm[5])/2);
+  chance = (int)((ply_ptr->level - crt_ptr->level)*20+ply_ptr->constitution*2+mprofic(ply_ptr, 6)/2);
 
 	if(mrand(1,100) > chance) {
 		mprint(fd, "You failed to harm %m.\n", m1arg(crt_ptr));
@@ -102,7 +102,7 @@ int midas( creature *ply_ptr, cmd *cmnd )
 
  /*Damage is based on raw con, raw int, player level, and your enchantment proficiency */
 	
-		dmg = (int)((ply_ptr->level/2)+mprofic(ply_ptr, realm[5])/10))*((ply_ptr->constitution+ply_ptr->intelligence)/15);
+		dmg = ((int)((ply_ptr->level/2)+mprofic(ply_ptr, 6)/10)*((ply_ptr->constitution+ply_ptr->intelligence)/15));
 		m = MIN(crt_ptr->hpcur, dmg);
 		crt_ptr->hpcur -= dmg;
 		add_enm_dmg(ply_ptr->name, crt_ptr, m);
@@ -124,8 +124,7 @@ int midas( creature *ply_ptr, cmd *cmnd )
       
       ANSI(fd, AFC_YELLOW);
 		  ANSI(fd, AM_BOLD);
-      broadcast_rom(fd, ply_ptr->rom_num, "Liquid gold begins to drip from %m, 
-				m1arg(crt_ptr));
+      broadcast_rom(fd, ply_ptr->rom_num, "Liquid gold begins to drip from %m.", m1arg(crt_ptr));
       ANSI(fd, AM_NORMAL);
 		  ANSI(fd, MAINTEXTCOLOR);
 		}
