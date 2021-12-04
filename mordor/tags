@@ -73,6 +73,7 @@ MAXPLAYERS	io.c	68;"	d	file:
 MAX_TEXIT	update.h	9;"	d
 MAX_TOKEN_SIZE	mtype.h	44;"	d
 MIDSEC	main.c	264;"	d	file:
+midas   smithycommand1.c  /^    int    midas( creature *ply_ptr, cmd *cmnd )$/;" f  
 MIGNORE	global.c	69;"	d	file:
 MISSEDCOLOR	global.c	/^    int    MISSEDCOLOR = AFC_CYAN;$/;"	v
 MON_FIRST	mtype.h	36;"	d
