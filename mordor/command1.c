@@ -826,9 +826,12 @@ int process_cmd(int	fd, cmd	*cmnd )
 	int	match=0, cmdno=0, c=0;
 
 	do {
+		/*sprintf(g_buffer, "%i", c);
+		output(fd, g_buffer);*/
 		if(!strcmp(cmnd->str[0], cmdlist[c].cmdstr)) {
 			match = 1;
 			cmdno = c;
+			
 			break;
 		}
 		else if(!strncmp(cmnd->str[0], cmdlist[c].cmdstr, 

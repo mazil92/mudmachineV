@@ -10,7 +10,13 @@
  *
  * $Log: mextern.h,v $
  *
- * 04/12/2021 added midas command from smithycommand1.c
+ 18/12/2021: time_output
+get_cmd_number
+cmdlist_size
+skills
+canuse
+ * 
+ 04/12/2021 added midas command from smithycommand1.c
  *
  * Revision 6.28  2021/09/25 03:00:00  develop
  * added tnl, hp and mp function declarations
@@ -244,6 +250,11 @@ typedef int (*SPELLFN)();
 
 /* smithycommand1.c */
 extern int midas(creature *ply_ptr, cmd *cmnd);
+extern int can_use ( creature *ply_ptr, cmd *cmnd );
+extern int skills (creature *ply_ptr, cmd *cmnd);
+extern char *time_output(time_t duration );
+extern int get_cmd_number(cmd *cmnd);
+extern int cmdlist_size();
 
 /* ACCESS.C */
 extern char *get_spell_name( int nIndex );

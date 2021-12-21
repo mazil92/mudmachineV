@@ -3,7 +3,11 @@
  * $Id: mordb.h,v 1.15 2001/07/25 02:48:55 develop Exp $
  *
  * $Log: mordb.h,v $
- * Revision 1.15  2001/07/25 02:48:55  develop
+ 13/12/2021: added integers for the can_use function
+
+ 18/12/2021* added realm and proficiency info for spells 
+
+ Revision 1.15  2001/07/25 02:48:55  develop
  * commented out LONG_MAX due to system header conflicts
  *
  * Revision 1.15  2001/07/25 01:13:13  develop
@@ -465,17 +469,47 @@
 #define BLUNT           2
 #define POLE            3
 #define MISSILE         4
-#define HAND		5
+#define HAND			5
 
 /* Spell Realms */
 #define EARTH           1
 #define WIND            2
 #define FIRE            3
 #define WATER           4
-#define	LIFE		5
-#define ENCHANTMENT	6
-#define	ARCANA		7
-#define	SORCERY		8
+#define	LIFE			5
+#define ENCHANTMENT		6
+#define	ARCANA			7
+#define	SORCERY			8
+#define NOREALM			9
+
+/* Proficiency Types */
+/* Which formula is used to apply proficiency gain */
+#define DAMAGE          1 /* Proficiency awarded based on damage dealt */
+#define HEALING         2 /* Proficiency awarded based on healing recieved */
+#define DURATION        3 /* Proficiency awarded based duration of buff delivered */
+#define INTENSITY       4 /* Proficiency awarded based on effecitveness of buff */
+#define FIXED 			5 /* Proficiency awarded is a fixed amount every cast */
+#define OTHER 			6 /* Proficiency awarded using a custom formula*/
+#define NOPROF 			7 /* This spell does not award proficiency */ 
+
+/* Spell Types */
+/* my intention is that you can streamline legality checks
+for targets and stuff or even lookup damage amounts just by 
+checking what kind of spell you are casting.
+
+I do genuinely hope we can get some milage out of this!*/
+
+#define DSINGLE  	1 /* Single Target Damage */
+#define DROOM    	2 /* Room Damage */
+#define HSINGLE  	3 /* Single Target healing */
+#define HROOM    	4 /* Room Healing */
+#define PBUFF    	5 /* Player Buff or debuff that Usually sets some sort of flag */
+#define MBUFF 		6 /* Monster Buff*/
+#define OBUFF 		7 /* Object Buff */
+#define TPORT 		8 /* Teleport etc. */
+#define SSPECIAL 	9 /* Special Spell Type (eg. conjure) */
+#define NOTYPE 		10/* This spell does not have a type */
+
 
 /* Daily use variables */
 #define DL_BROAD        0       /* Daily broadcasts */
@@ -490,7 +524,7 @@
 #define DL_RMGIC	9	/* Daily resist-magic's */
 
 /* Last-time specifications */
-#define LT_INVIS        0
+#define LT_NONE         0
 #define LT_PROTE        1
 #define LT_BLESS        2
 #define LT_ATTCK        3
@@ -537,6 +571,13 @@
 #define LT_MSCAV       	44
 #define LT_CONJU	45
 #define LT_MIDAS	46		/* last time you used MIDAS */
+#define LT_INVIS	47
+
+/*can_use variables*/
+#define CANUSE 		0
+#define LOWLEVEL	1
+#define WRONGCLASS	2
+#define ONCOOLDOWN	3
 
 #define F_ISSET(p,f)    (((p)->flags[(f)/8] & 1<<((f)%8)) ? 1 : 0 )
 #define F_SET(p,f)      ((p)->flags[(f)/8] |= 1<<((f)%8))

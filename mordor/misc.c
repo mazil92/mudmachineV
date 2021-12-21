@@ -719,6 +719,7 @@ void please_wait(int fd, time_t duration )
 
 }
  
+
 /*====================================================================*/
 /* checks if the given str contains all digits */
 int is_num(char *str )

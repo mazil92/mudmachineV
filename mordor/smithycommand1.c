@@ -1,4 +1,15 @@
 /*New commands made by Smithy
+18/12/2021: time_output
+get_cmd_number
+cmdlist_size
+skills
+canuse
+
+21/12/2021: completed skill command
+also added: canuse, time_output, get_skill_number; etc. for skills command to use
+
+13/12/2021: Added checking function CAN_USE
+
 04/12/2021: Added Alchemist Abilities: Midas, Attune, Distill
 
 */
@@ -147,6 +158,297 @@ This ability sets a flag on alchemists enabling them to have a cast interval of 
 /* DISTILL 
 This ability consumes an Alchemist's gold and converts it into MP*/
 
-/* */
-/* */
-/* */
+/* CAN_USE
+This function checks to see if the player can use the ability fed to the function.
+Though, this function will not check an exhaustive list of possibilities
+It will check:
+
+-class requirements
+-level requirements
+-cooldown requirements*/
+
+int can_use ( creature *ply_ptr, cmd *cmnd )
+{
+	creature	*crt_ptr;
+	room		*rom_ptr;
+	time_t		i, t;
+	int			fd, lt, cmdno;
+	char		cmdname[100]; 
+
+cmdno = get_cmd_number(cmnd);
+/*will probably have to define integers for the skill numbers but oh well
+
+/* CHECK CLASS*/
+
+if (ply_ptr->class < BUILDER){
+	switch(cmdno){
+		/*track*/
+		case 21: 
+		if (ply_ptr->class != RANGER && ply_ptr->class != DRUID ){
+			return(WRONGCLASS);
+		}
+		/*peek*/
+		case 22:
+		if (ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
+			return(WRONGCLASS);
+		}
+		/*pick*/
+		case 35:
+		if (ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
+			return(WRONGCLASS);
+		}
+		/*steal*/
+		case 36:
+		if (ply_ptr->class != THIEF){
+			return(WRONGCLASS);
+		}
+		/*backstab*/
+		case 45:
+		if (ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
+			return(WRONGCLASS);
+		}
+		/*circle*/
+		case 50:
+		if (ply_ptr->class != BARBARIAN && ply_ptr->class != FIGHTER ){
+			return(WRONGCLASS);
+		}
+		/*bash*/
+		case 51:
+		if (ply_ptr->class != BARBARIAN && ply_ptr->class != FIGHTER ){
+			return(WRONGCLASS);
+		}
+		/*turn*/
+		case 62:
+		if (ply_ptr->class != PALADIN && ply_ptr->class != CLERIC ){
+			return(WRONGCLASS);
+		}
+		/*haste*/
+		case 64:
+		if (ply_ptr->class != RANGER ){
+			return(WRONGCLASS);
+		}
+		/*pray*/
+		case 65:
+		if (ply_ptr->class != PALADIN && ply_ptr->class != CLERIC ){
+			return(WRONGCLASS);
+		}
+		/*bard_song*/
+		case 100:
+		if (ply_ptr->class != BARD ){
+			return(WRONGCLASS);
+		}
+		/*bard_song2*/
+		case 81:
+		if (ply_ptr->class != BARD ){
+			return(WRONGCLASS);
+		}
+		/*meditate*/
+		case 82:
+		if (ply_ptr->class != MONK ){
+			return(WRONGCLASS);
+		}
+		/*touch_of_death*/
+		case 83:
+		if (ply_ptr->class != MONK){
+			return(WRONGCLASS);
+		}
+		/*transform*/
+		case 84:
+		if (ply_ptr->class != DRUID ){
+			return(WRONGCLASS);
+		}
+		/*rechard_wand*/
+		case 89:
+		if (ply_ptr->class != ALCHEMIST ){
+			return(WRONGCLASS);
+		}
+		/*scout*/
+		case 93:
+		if (ply_ptr->class != RANGER && ply_ptr->class != DRUID && ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
+			return(WRONGCLASS);
+		}
+		/*transmute*/
+		case 94:
+		if (ply_ptr->class != DRUID ){
+			return(WRONGCLASS);
+		}
+		/*enchant*/
+		case 91:
+		if (ply_ptr->class != MAGE && ply_ptr->class != ALCHEMIST ){
+			return(WRONGCLASS);
+		}
+		/*berserk*/
+		case 95:
+		if (ply_ptr->class != BARBARIAN ){
+			return(WRONGCLASS);
+		}
+		/*barkskin*/
+		case 97:
+		if (ply_ptr->class != DRUID ){
+			return(WRONGCLASS);
+		}
+		/*midas*/
+		case 172:
+		if (ply_ptr->class != RANGER && ply_ptr->class != DRUID ){
+			return(WRONGCLASS);
+		}
+	}
+
+}
+
+
+/* CHECK LEVEL*/
+if (ply_ptr->level < cmdlist[cmdno].level){
+	return(LOWLEVEL);
+}
+
+/* CHECK COOLDOWN*/
+lt = cmdlist[cmdno].lt;
+if (lt > 0){
+
+	t = time(0);
+	i = ply_ptr->lasttime[lt].ltime;
+
+	if (t-i < cmdlist[cmdno].cooldown){
+		return(ONCOOLDOWN);
+	}
+}
+
+
+/*if the function gets this far, the player may use it*/
+return(CANUSE);
+
+}
+/* SKILLS
+This function reports to a player the skills they have available to them and their cooldowns*/
+int cmdlist_size(){
+	int size;
+
+	size = sizeof(*cmdlist)/sizeof(cmdlist[0]);
+	return(size);
+} 
+ 
+
+int skills (creature *ply_ptr, cmd *cmnd)
+{
+	char	alstr[8]; 
+	char 	str[2048];
+	char	skll[128][30];
+	char	cldwn[128][30];
+	int 	fd, cnt, i, j, lt, cmdno;
+	long	duration, lv;
+	time_t  tt, ti, cd; 
+
+	
+	fd = ply_ptr->fd;
+	
+memset(str,0,strlen(str));
+strcpy (str, "Skills available: ");
+
+for(i=0,j=0; i< 400; i++){
+	
+	/*elog("343");*/
+	sprintf(g_buffer, "%i, %s, %i", i, cmdlist[i].cmdstr, can_use(ply_ptr, cmnd));
+	
+	/*output_nl(fd, g_buffer);*/
+	
+	/*only consider skills that I want to see
+	for this, I use a distinction between level 1 and 0 on the cmdlist*/
+	if (cmdlist[i].level > 0){
+	if((can_use(ply_ptr, cmnd) == CANUSE )|| (can_use(ply_ptr, cmnd) == ONCOOLDOWN )){
+		/*elog("346");*/
+		/*elog(g_buffer);*/
+		strcpy(skll[j], cmdlist[i].cmdstr);
+		strcpy(cldwn[j], ", ");
+		/*cooldown stuff here*/
+		/*elog("353");*/
+		lt = cmdlist[i].lt;
+		if (lt > 0){
+			tt = time(0);
+			ti = ply_ptr->lasttime[lt].ltime;
+			cd = cmdlist[i].cooldown;
+			strcpy(cldwn[j], "[");
+			if ((cd-tt+ti) > 0){
+				sprintf(g_buffer, "%s", time_output(cd-tt+ti));
+			}
+			else {
+				sprintf(g_buffer, "ready");
+			}
+			strcat(cldwn[j], g_buffer);		
+			strcat(cldwn[j], "]");
+			
+		}
+		else {
+			strcpy(cldwn[j], "[ready]");
+		}
+		strcat(cldwn[j], ", ");
+		/*elog("355");*/
+		j++;
+	}
+	}
+}
+/*elog("366");*/
+if(!j){
+	strcpy(str, "None.");
+}
+else {
+	/* qsort((void *)skll, j, 20, (PFNCOMPARE)strcmp); */
+	for(i=0; i<j; i++) {
+		strcat(str, skll[i]);
+		strcat(str, cldwn[i]);
+		
+	}
+	/*str[strlen(str)-2] = '.';
+	str[strlen(str)-1] = 0;*/
+}
+/*elog("385");*/
+output_nl(fd, str);
+
+/*elog("389");*/
+/*F_CLR(Ply[fd], ply_ptr);*/
+RETURN(fd, command, 1);
+}
+
+
+/* get_cmd_number*/
+int get_cmd_number(cmd *cmnd){
+
+	int	match=0, cmdno=0, c=0;
+
+	do {
+		if(!strcmp(cmnd->str[0], cmdlist[c].cmdstr)) {
+			match = 1;
+			cmdno = c;
+			return (cmdlist[c].cmdno);
+			break;
+		}
+		else if(!strncmp(cmnd->str[0], cmdlist[c].cmdstr, 
+			strlen(cmnd->str[0]))) {
+			match++;
+			cmdno = c;
+			return (cmdlist[c].cmdno);
+		}
+		c++;
+	} while(cmdlist[c].cmdno);
+
+	return (0);
+}
+
+/* time output *********************************
+ this is the time output itended for use in the skill command output*/
+char *time_output(time_t duration ){
+if(duration > 60L) {
+	sprintf(g_buffer, "%ld:%02ld", (long)duration/60L, (long)duration%60L);
+		}
+else if(duration < 10L){
+	sprintf(g_buffer, "00:0%ld", (long)duration);
+}
+else if(duration == 0L){
+	sprintf(g_buffer, "00:00");
+}
+else{
+			sprintf(g_buffer,"00:%ld", (long)duration);
+		}
+
+return(g_buffer );
+}
