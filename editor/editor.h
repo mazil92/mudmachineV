@@ -15,7 +15,8 @@ extern void edit_exits(room *rom_ptr);
 extern void getnum(int *i, int min, int max);
 extern void getnums(long *i, long orig, long min, long max);
 extern void getstr(char *str, char *origstr, int maxlen);
-
+extern void convert_to_csv();
+extern void convert_from_csv();
 
 /* prototypes for editor2.c */
 extern void edit_player();

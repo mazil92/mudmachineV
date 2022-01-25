@@ -5,6 +5,9 @@
  *	(C) 1994, 1995 Brooke Paul
  *
  *
+21/01/2022: added damage types to room_damage
+love smithy
+
  * $Id: magic8.c,v 6.19 2001/07/06 17:36:48 develop Exp $
  *
  * $Log: magic8.c,v $
@@ -43,12 +46,17 @@
 
 int room_damage(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_t *osp)
 {          
-   	int     fd, m, dmg, victims, bns=0, invisflag;
+   	int     fd, m, dmg, dmg2, victims, bns=0, invisflag, damage_type, spellnumber;
 	long	totalrealm, addrealm;
 	ctag	*cp;
 	ctag	*cp_tmp;
+    float temp1;
 
 	fd = ply_ptr->fd;
+
+    /*detect damage type here*/
+    spellnumber = get_spell_number(spellname);
+    damage_type = spell_damage_type(spellnumber);
 
 	if(how == POTION) {
 		output(fd, "The spell fizzles.\n");
@@ -87,7 +95,7 @@ int room_damage(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_t *o
                   m1arg(ply_ptr));
         }
 
-        if(how == CAST) switch(osp->bonus_type) {
+    if(how == CAST) switch(osp->bonus_type) {
         case 1:
             bns = bonus[(int)ply_ptr->intelligence] +
                 mprofic(ply_ptr, osp->realm)/10;
@@ -138,6 +146,11 @@ int room_damage(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_t *o
         sprintf(g_buffer, "You cast a %d point %s spell on all enemies.\n",
                 dmg, spellname);
         output(fd, g_buffer);
+
+        /*if (ply_ptr->type == PLAYER){
+            damage_outputter(ply_ptr, dmg, damage_type);
+        }*/
+
 	if(osp->splno == STORNA)
                 broadcast_rom(fd, ply_ptr->rom_num,"%M summons a tornado!", m1arg(ply_ptr));
 	else if(osp->splno == SINCIN)
@@ -149,9 +162,11 @@ int room_damage(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_t *o
 
 
 
-	dmg = dmg / victims;
-        dmg = MAX(1, dmg);
-        totalrealm = 0;
+	/*dmg = dmg / victims;*/
+    /*Mate, it's the 6th level spell why the hell we 
+    need to split the damage? What's the point?*/
+    dmg = MAX(1, dmg);
+    totalrealm = 0;
         
    if(!F_ISSET(ply_ptr->parent_rom, RNOKIL) && F_ISSET(ply_ptr, PCHAOS)) {
 	cp = ply_ptr->parent_rom->first_ply;
@@ -163,16 +178,28 @@ int room_damage(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_t *o
            if(!in_group(ply_ptr, cp->crt) && (ply_ptr != cp->crt) && 
 			F_ISSET(cp->crt, PCHAOS)) {
 
-              sprintf(g_buffer,
-                     "%%M casts a %s spell on you for %d damage.\n",
-                     spellname, dmg);
-              mprint(cp->crt->fd, g_buffer, m1arg(ply_ptr));
+              temp1 = calc_damage((float)dmg, (float)compute_DR(cp->crt), (float)compute_resistance(cp->crt, damage_type), (float)armor_confidence(cp->crt));
+              dmg2 = temp1;
 
               if(F_ISSET(cp->crt, PRMAGI))
-                  cp->crt->hpcur -= (dmg * 2 * MIN(50, cp->crt->piety + cp->crt->intelligence)) / 100;
-              else
-                 cp->crt->hpcur -= dmg;
+                  dmg2 = (dmg2 * 2 * MIN(50, cp->crt->piety + cp->crt->intelligence)) / 100;
+              
+              cp->crt->hpcur -= dmg2;
               cp->crt->hpcur = MIN(cp->crt->hpmax, cp->crt->hpcur);
+
+              sprintf(g_buffer,
+                     "%%M casts a %s spell on you for %d damage.\n",
+                     spellname, dmg2);
+              mprint(cp->crt->fd, g_buffer, m1arg(ply_ptr));
+              
+              /*ADD DAMAGE TYPE OUTPUT HERE*/
+              if (cp->crt->type == PLAYER){
+              damage_outputter(cp->crt, dmg2, damage_type);
+              }
+              if (ply_ptr->type == PLAYER){
+                    damage_outputter(ply_ptr, dmg2, damage_type);
+                }
+              
 
               if(cp->crt->hpcur < 1) {
                 mprint(fd, "You killed %m.\n", m1arg(cp->crt));
@@ -195,17 +222,25 @@ int room_damage(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_t *o
 
               if(is_crt_killable(cp->crt, ply_ptr)) {
 
-                 if (F_ISSET(cp->crt, MRMAGI))
-                    cp->crt->hpcur -= (dmg * 2 * MIN(50, cp->crt->piety + cp->crt->intelligence))/100;
-	         else
-	            cp->crt->hpcur -= dmg;
-	         cp->crt->hpcur = MIN(cp->crt->hpmax, cp->crt->hpcur);
+                temp1 = calc_damage((float)dmg, (float)compute_DR(cp->crt), (float)compute_resistance(cp->crt, damage_type), (float)armor_confidence(cp->crt));
+                dmg2 = temp1;
 
-                 m = MIN(cp->crt->hpcur, dmg);
+                if (F_ISSET(cp->crt, MRMAGI))
+                    dmg2 = (dmg2 * 2 * MIN(50, cp->crt->piety + cp->crt->intelligence))/100;
+	         
+	            cp->crt->hpcur -= dmg2;
+
+	            cp->crt->hpcur = MIN(cp->crt->hpmax, cp->crt->hpcur);
+
+                 m = MIN(cp->crt->hpcur, dmg2);
+                 m = MAX(1, m);
                  addrealm = (m * cp->crt->experience) / MAX(1,cp->crt->hpmax);
                  addrealm = MIN(addrealm, cp->crt->experience);
                  totalrealm = totalrealm + addrealm;
 
+                if (ply_ptr->type == PLAYER){
+                    damage_outputter(ply_ptr, dmg2, damage_type);
+                }
 
                  add_enm_crt(ply_ptr->name, cp->crt);	/* adds player to monster enemy list */
 

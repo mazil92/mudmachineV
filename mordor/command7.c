@@ -8,7 +8,11 @@
  * $Id: command7.c,v 6.29 2001/07/31 00:39:57 develop Exp $
  *
  * $Log: command7.c,v $
- * Revision 6.29  2001/07/31 00:39:57  develop
+ * 
+22/01/2022: made backstab observe my new damage types
+love smithy
+
+ Revision 6.29  2001/07/31 00:39:57  develop
  * fixed error in buy that didn't save_ply when purchase was made
  * and shop owner was offline
  *
@@ -930,13 +934,13 @@ int backstab( creature *ply_ptr, cmd *cmnd )
                 		ply_ptr->proficiency[2] += addprof;
            		}
 		}
-		crt_ptr->hpcur -= n;
+		combat_output(ply_ptr, crt_ptr, n);
 
-		sprintf(g_buffer, "You hit for %d damage.\n", n);
+		/*sprintf(g_buffer, "You hit for %d damage.\n", n);
 		output(fd, g_buffer );
 
 		sprintf(g_buffer, "%%M hit you for %d damage.\n", n);
-		mprint(crt_ptr->fd, g_buffer, m1arg(ply_ptr));
+		mprint(crt_ptr->fd, g_buffer, m1arg(ply_ptr));*/
 
 		if(crt_ptr->hpcur < 1) {
 			mprint(fd, "You killed %m.\n", m1arg(crt_ptr));

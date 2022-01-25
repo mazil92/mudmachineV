@@ -5,6 +5,10 @@
  *
  *	Copyright (C) 1991, 1992, 1993 Brooke Paul
  *
+10/01/2022: Added a check in the compute_ac function to examine
+whether or not a worn item grants it's armor value towards AC
+except for legacy items that have neither flag enabled (AC or DR)
+
  * $Id: player.c,v 6.18 2001/07/02 01:05:43 develop Exp $
  *
  * $Log: player.c,v $
@@ -863,7 +867,17 @@ if(EATNDRINK){
 		}
 	} 
 	}		
-	
+	if(F_ISSET(ply_ptr, PATTUNE)) {
+		
+		if(t > LT(ply_ptr, LT_ATTUNE)) {
+			ANSI(ply_ptr->fd, AFC_GREEN);
+			output(ply_ptr->fd, "You feel less attuned.\n");
+			ANSI(ply_ptr->fd, AFC_WHITE);
+			F_CLR(ply_ptr, PATTUNE);
+			ply_ptr->intelligence -= 5;
+			compute_ac(ply_ptr);
+		}
+	}
 	if(F_ISSET(ply_ptr, PHASTE)) {
 		if(t > LT(ply_ptr, LT_HASTE)) {
 			ANSI(ply_ptr->fd, AFC_GREEN);
@@ -1493,9 +1507,10 @@ void compute_ac(creature *ply_ptr )
 
 	ac = 100;
 
-
+	/*check that the worn item grants its armor value towards AC
+	Default is AC if neither the AC nor DR flag is declared*/
 	for(i=0; i<MAXWEAR; i++)
-		if(ply_ptr->ready[i])
+		if(ply_ptr->ready[i] && ((F_ISSET(ply_ptr->ready[i], OGIVESAC) )|| (!F_ISSET(ply_ptr->ready[i], OGIVESAC) && !F_ISSET(ply_ptr->ready[i], OGIVESDR))))
 			ac -= ply_ptr->ready[i]->armor;
 
 	ac -= 5*bonus[(int)ply_ptr->dexterity];

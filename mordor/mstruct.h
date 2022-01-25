@@ -117,6 +117,9 @@ struct cmdstruct {
 	char		*cmdstr;
 	int		cmdno;
 	int		(*cmdfn)();
+	int 	lt; /*any LT number associated with this command*/
+	time_t 	cooldown; /* base cooldown for this skill*/
+	int 	level; /*level requirement to use ability*/ 
 };
 
 struct creature_template {

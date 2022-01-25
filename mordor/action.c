@@ -1004,7 +1004,7 @@ int action(creature *ply_ptr, cmd *cmnd )
 			OUT("You greet everyone cordially.\n", "%M greets everyone cordially.");
 		}
 	}
-
+	output(fd, "");
 	return(0);
 
 }

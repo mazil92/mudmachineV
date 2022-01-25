@@ -8,6 +8,10 @@
  * $Id: mtype.h,v 6.18 2001/07/22 20:05:52 develop Exp $
  *
  * $Log: mtype.h,v $
+
+09/01/2022
+Added SIDENTIFY spell
+
  * Revision 6.18  2001/07/22 20:05:52  develop
  * gold theft changes
  *
@@ -142,6 +146,7 @@
 #define SINCIN		60	/* incinerate */
 #define STRMOR		61	/* tremor */
 #define SFLOOD		62	/* flood */
+#define SIDENTIFY	63	/* identify spell */
 
 
 /*Trap types */

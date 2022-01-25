@@ -5,7 +5,13 @@
  *
  *  Copyright (C) 1991, 1992, 1993 Brooke Paul
  *
- * $Id: command5.c,v 6.19 2001/07/22 20:05:52 develop Exp $
+ * 
+11/01/2022: ADDED new bonus damage to combat routine
+
+10/01/2022: added colour output for different damage types
+
+
+ $Id: command5.c,v 6.19 2001/07/22 20:05:52 develop Exp $
  *
  * $Log: command5.c,v $
  * Revision 6.19  2001/07/22 20:05:52  develop
@@ -77,7 +83,7 @@ int attack(creature *ply_ptr, cmd *cmnd )
         output(fd, "You don't see that here.\n");
         return(0);
     }
-
+ 
     attack_crt(ply_ptr, crt_ptr);
 
     return(0);
@@ -95,7 +101,9 @@ int attack(creature *ply_ptr, cmd *cmnd )
 int attack_crt(creature *ply_ptr, creature *crt_ptr )
 {
 	time_t	i, t;
-    	int	fd, m, n, p, addprof;
+    int	x, j, total = 0, k, fd, m, n, p, addprof, bonusone = 0, bonustwo = 0;
+    
+    
 
 	fd = ply_ptr->fd;
 
@@ -106,6 +114,8 @@ int attack_crt(creature *ply_ptr, creature *crt_ptr )
     		if(t < i)
         		return(0);
     	}
+	
+	
 	
 	if (crt_ptr->type == PLAYER) {
 		if(is_stolen_crt(ply_ptr->name, crt_ptr)) {
@@ -124,57 +134,25 @@ int attack_crt(creature *ply_ptr, creature *crt_ptr )
 			del_charm_crt(ply_ptr, crt_ptr);
     	}
 
-    	if(ply_ptr->type == PLAYER)
-    		F_CLR(ply_ptr, PHIDDN);
+    if(ply_ptr->type == PLAYER)
+    	F_CLR(ply_ptr, PHIDDN);
     
-    	if(F_ISSET(ply_ptr, PINVIS) && ply_ptr->type==PLAYER) {
-        	F_CLR(ply_ptr, PINVIS);
-        	output(fd, "Your invisibility fades.\n");
-        	broadcast_rom(fd, ply_ptr->rom_num, "%M fades into view.",
-			      m1arg(ply_ptr));
-    	}
+    fade_invis(fd, ply_ptr);
 
-    	ply_ptr->lasttime[LT_ATTCK].ltime = t;
-    
-    	if(F_ISSET(ply_ptr, PHASTE) && ply_ptr->type==PLAYER)
-        	ply_ptr->lasttime[LT_ATTCK].interval = 2;
-    
-	else
-        	ply_ptr->lasttime[LT_ATTCK].interval = 3;
-
-    	if(F_ISSET(ply_ptr, PBLIND) && ply_ptr->type==PLAYER)
-		ply_ptr->lasttime[LT_ATTCK].interval = 7;
+    attack_cooldown(t, ply_ptr);
     	
 	if(crt_ptr->type == MONSTER) {
 		if(!is_crt_killable(crt_ptr, ply_ptr)) {
 			return(0);
 		}
 
-		if(F_ISSET(ply_ptr, PALIAS) && ply_ptr->type==PLAYER) {
-			mprint(fd, "You attack %m.\n", m1arg(crt_ptr));
-			broadcast_rom(fd, ply_ptr->rom_num, "%M attacks %m.",
-					m2args(ply_ptr, crt_ptr));
-       		}
-	
-		else if(add_enm_crt(ply_ptr->name, crt_ptr) < 0 ) {
-			/* if(is_charm_crt(crt_ptr->name, ply_ptr))
-				del_charm_crt(crt_ptr, ply_ptr); */
-           
-	    		mprint(fd, "You attack %m.\n", m1arg(crt_ptr));
-            		broadcast_rom(fd, ply_ptr->rom_num, "%M attacks %m.",
-					m2args(ply_ptr, crt_ptr));
-       		}
-		
-		else if(ply_ptr->type==MONSTER) {
-			add_enm_crt(ply_ptr->name, crt_ptr);
-		} 
-
-
-        	if(F_ISSET(crt_ptr, MMGONL)) {
-            		mprint(fd, "Your weapon has no effect on %m.\n",
-				m1arg(crt_ptr));
-            		return(0);
-     	 	}
+		add_attackers(fd, ply_ptr, crt_ptr);
+				
+        if(F_ISSET(crt_ptr, MMGONL)) {
+           		mprint(fd, "Your weapon has no effect on %m.\n",
+			m1arg(crt_ptr));
+           		return(0);
+     	}
         
 		if(F_ISSET(crt_ptr, MENONL)) {
 			if(!ply_ptr->ready[WIELD-1] ||
@@ -184,7 +162,6 @@ int attack_crt(creature *ply_ptr, creature *crt_ptr )
                 		return(0);
             		}
         	}
-	
 	} // end of if(crt_ptr->type == MONSTER)
     
 	else {
@@ -199,51 +176,104 @@ int attack_crt(creature *ply_ptr, creature *crt_ptr )
 				"%M attacked %m!", m2args(ply_ptr, crt_ptr));
     	}
 
-    	if(ply_ptr->ready[WIELD-1]) {
-        	if(ply_ptr->ready[WIELD-1]->shotscur < 1) {
-			break_weapon( ply_ptr );
-            		return(0);
-        	}
+    if(ply_ptr->ready[WIELD-1]) {
+       	if(ply_ptr->ready[WIELD-1]->shotscur < 1) {
+		break_weapon( ply_ptr );
+           		return(0);
+       	}
    	}
 
-    	n = ply_ptr->thaco - crt_ptr->armor/10;
+   	
+    n = ply_ptr->thaco - crt_ptr->armor/10;
     
-    	if(F_ISSET(ply_ptr, PBLIND))
-		n += 5;
+    if(F_ISSET(ply_ptr, PBLIND))
+	n += 5;
 
-    	if(mrand(1,20) >= n) {
-        	if(ply_ptr->ready[WIELD-1])
-            		n = mdice(ply_ptr->ready[WIELD-1]) +
+    if(mrand(1,20) >= n) {
+       	if(ply_ptr->ready[WIELD-1]){
+           		
+           		n = mdice(ply_ptr->ready[WIELD-1]) +
 			    bonus[(int)ply_ptr->strength];
-        	
-		else
-            		n = mdice(ply_ptr) + bonus[(int)ply_ptr->strength];
 
-        	if(crt_ptr->class >= BUILDER) 
-        		n = 0;
+			    bonusone = 0;
+			    bonustwo = 0;
+			    /*SORRY I MADE A BETTTER BONUS DAMAGE CODE SORRY
+			    /*NEW BONUS DAMAGE CODE HERE
+			    if(F_ISSET(ply_ptr->ready[WIELD-1], OBONUS1DAMAGE)){
+			    	bonusone = dice(ply_ptr->ready[WIELD-1]->special-8,ply_ptr->ready[WIELD-1]->sdice,0);
+			    	
+			    	if (crt_ptr->type == MONSTER){
+		   				if (ply_ptr->ready[WIELD-1]){
+		   					bonusone = calc_damage((float)bonusone, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, ply_ptr->ready[WIELD-1]->magicrealm), (float)armor_confidence(crt_ptr));
+		   				}
+		   				else{
+		   					bonusone = calc_damage((float)bonusone, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, DHAND), (float)armor_confidence(crt_ptr));
+		   				}
+					}
+					else {
+		   				if (ply_ptr->ready[WIELD-1]){
+		   					bonusone = calc_damage((float)bonusone, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, ply_ptr->ready[WIELD-1]->magicrealm), (float)armor_confidence(crt_ptr));
+		   				}
+		   				else{		   		
+		   					bonusone = calc_damage((float)bonusone, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, DHAND), (float)armor_confidence(crt_ptr));
+						}
+					}
+					bonusone = MAX(0, bonusone);
+			    }
+			    /*SORRY I MADE A BETTTER BONUS DAMAGE CODE SORRY
+			    	if(F_ISSET(ply_ptr->ready[WIELD-1], OBONUS2DAMAGE)){
+			    	bonustwo = dice(ply_ptr->ready[WIELD-1]->special2,ply_ptr->ready[WIELD-1]->sdice,0);
+			    
+			    	if (crt_ptr->type == MONSTER){
+		   				if (ply_ptr->ready[WIELD-1]){
+		   					bonustwo = calc_damage((float)bonustwo, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, ply_ptr->ready[WIELD-1]->special1), (float)armor_confidence(crt_ptr));
+		   				}
+		   				else{
+		   					bonustwo = calc_damage((float)bonustwo, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, DHAND), (float)armor_confidence(crt_ptr));
+		   				}
+					}
+					else {
+		   				if (ply_ptr->ready[WIELD-1]){
+		   					bonustwo = calc_damage((float)bonustwo, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, ply_ptr->ready[WIELD-1]->special1), (float)armor_confidence(crt_ptr));
+		   				}
+		   				else{		   		
+		   					bonustwo = calc_damage((float)bonustwo, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, DHAND), (float)armor_confidence(crt_ptr));
+						}
+
+					}
+					bonustwo = MAX(0, bonustwo);
+
+			    
+			    }*/
+		}
+		else
+         	n = mdice(ply_ptr) + bonus[(int)ply_ptr->strength];
+
+        if(crt_ptr->class >= BUILDER) 
+        	n = 0;
         
 		n = MAX(1,n);
 
-        	if(ply_ptr->class == PALADIN) {
-        		if(ply_ptr->alignment < 0) {
-                		n /= 2;
-               			output(fd,
+        if(ply_ptr->class == PALADIN) {
+        	if(ply_ptr->alignment < 0) {
+               		n /= 2;
+           			output(fd,
 					"Your evilness reduces your damage.\n");
-            		}
+       		}
             
 			else if(ply_ptr->alignment > 250) {
-                		n++;
-                		output(fd,
+          		n++;
+           		output(fd,
 				     "Your goodness increases your damage.\n");
-         		}
         	}
+        }
 		if(GUILDEXP) {
 			if(check_guild(ply_ptr) == 6) {
                         n += 1;
                         output(fd,
 			       "Your guild expertise increases your damage.\n");
-                 }
-         }
+            }
+        }
 
 		
 		if(ply_ptr->class == MONK) {
@@ -265,18 +295,44 @@ linear function which starts monks at 1st level with 2-4 dmg, and yields
 				if (n < 1) n = 1;
 			}
 /*	END NEW MONK CODE	*/
-                       if(GUILDEXP) {
-                               if(check_guild(ply_ptr) == 6) 
-                                       n++;
+            if(GUILDEXP) {
+                if(check_guild(ply_ptr) == 6) 
+                    n++;
                                /* Guild message has already been output above,
                                but since n was reassigned re-add the dmg
                                bonus.  */
                                
-                       }
+            }
 
 		}
 
-        	p = mod_profic(ply_ptr);
+		/* I don't want to do this yet!! only bother with
+		resistances and damage types once you are final on the number being inflicted!
+		if (crt_ptr->type == MONSTER){
+		   	if (ply_ptr->ready[WIELD-1]){
+		   		n = calc_damage((float)n, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, ply_ptr->ready[WIELD-1]->type + 1), (float)armor_confidence(crt_ptr));
+		   	}
+		   	else{
+		   		/*output(fd, "doing some barehand damage reduction here\n");*/
+		   		/*sprintf(g_buffer, "%i, %i, %i. ", n, compute_DR_creature(crt_ptr), compute_resistance_creature(crt_ptr, DHAND));
+		   		output(fd, g_buffer);
+		   		sprintf(g_buffer, "%.1f, %.1f, %.1f, = %.1f. ", (float)n, (float)compute_DR_creature(crt_ptr)/10, (float)compute_resistance_creature(crt_ptr, DHAND)/100), (float)(n - ((compute_DR_creature(crt_ptr)/10)*(compute_resistance_creature(crt_ptr, DHAND)/100)));
+		   		output(fd, g_buffer);*/
+		/*
+		   		n = calc_damage((float)n, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, DHAND), (float)armor_confidence(crt_ptr));
+		   	}
+		}
+		else {
+		   	if (ply_ptr->ready[WIELD-1]){
+		   		n = calc_damage((float)n, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, ply_ptr->ready[WIELD-1]->type +1), (float)armor_confidence(crt_ptr));
+		   	}
+		   	else{		   		
+		   		n = calc_damage((float)n, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, DHAND), (float)armor_confidence(crt_ptr));
+			}
+		}*/
+		
+		n = MAX(n, 0);
+        p = mod_profic(ply_ptr);
         
 		if(mrand(1,100) <= p || (ply_ptr->ready[WIELD-1] &&
 		   F_ISSET(ply_ptr->ready[WIELD-1],OALCRT))) {
@@ -305,8 +361,7 @@ linear function which starts monks at 1st level with 2-4 dmg, and yields
             		}
         	
 		} // end of if(mrand(1,100) <= p || (ply_ptr->read[wield-1...... 
-		else 
-		  if(ply_ptr->type == PLAYER && (mrand(1,100) <= (5-p) || 
+		else if(ply_ptr->type == PLAYER && (mrand(1,100) <= (5-p) || 
 		     mrand(1,100) >
 		     Ply[ply_ptr->fd].extr->luck+ply_ptr->level*2) && 
 		     ply_ptr->ready[WIELD-1] &&
@@ -317,46 +372,29 @@ linear function which starts monks at 1st level with 2-4 dmg, and yields
             		broadcast_rom(fd, ply_ptr->rom_num, g_buffer,
 					m1arg(ply_ptr));
             		n = 0;
+            		bonusone = 0;
+            		bonustwo = 0;
+
             		add_obj_crt(ply_ptr->ready[WIELD-1], ply_ptr);
 			dequip(ply_ptr, ply_ptr->ready[WIELD-1]);
             		ply_ptr->ready[WIELD-1] = 0;
             		compute_thaco(ply_ptr);
-       	  	}
+       	}
 
-        	sprintf(g_buffer, "You hit for %d damage.\n", n);
-		output(fd, g_buffer);
-        
-		sprintf(g_buffer, "%%M hit you for %d damage.\n", n);
-		mprint(crt_ptr->fd, g_buffer, m1arg(ply_ptr) );
-	
-		if(F_ISSET(crt_ptr, MNOPRE) || crt_ptr->type == PLAYER)
-			sprintf(g_buffer, "%s %s %s!", ply_ptr->name,
-				hit_description(n), crt_ptr->name);
-		else
-			sprintf(g_buffer, "%s %s the %s!", ply_ptr->name,
-				hit_description(n), crt_ptr->name);
-
-		broadcast_dam(ply_ptr->fd, crt_ptr->fd, ply_ptr->rom_num,
-				g_buffer, NULL);
-
-		if (ply_ptr->type == MONSTER && crt_ptr->type == MONSTER)
-			broadcast_rom2(crt_ptr->fd,fd,crt_ptr->rom_num,
-					"%M hits %m!", 
-				m2args(ply_ptr,crt_ptr));
+       	combat_output(ply_ptr, crt_ptr, n);
 
 		/* handle shot reduction */
 		attack_with_weapon( ply_ptr );
 
         	m = MIN(crt_ptr->hpcur, n);
-        	crt_ptr->hpcur -= n;
 
         	if(crt_ptr->type != PLAYER) {
         		/* uncomment to remove charm when attack   */   
 			/* if(is_charm_crt(crt_ptr->name, ply_ptr))*/
 			/*	del_charm_crt(crt_ptr, ply_ptr);   */
 
-			add_enm_dmg(ply_ptr->name, crt_ptr, m);
-          	
+			
+
 			if(ply_ptr->ready[WIELD-1]) {
                 		p = MIN(ply_ptr->ready[WIELD-1]->type, 4);
                 		addprof = (m * crt_ptr->experience) /
@@ -385,7 +423,7 @@ linear function which starts monks at 1st level with 2-4 dmg, and yields
 		} /* end of if(crt_ptr->type != PLAYER) */
         
 		if(crt_ptr->hpcur < 1) {
-            		mprint(fd, "You killed %m.\n", m1arg(crt_ptr));
+            		mprint(fd, "\nYou killed %m.\n", m1arg(crt_ptr));
             		broadcast_rom2(fd, crt_ptr->fd, ply_ptr->rom_num,
                       		"%M killed %m.", m2args(ply_ptr, crt_ptr));
             

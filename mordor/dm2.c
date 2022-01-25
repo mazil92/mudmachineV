@@ -732,6 +732,7 @@ int stat_crt(creature *ply_ptr, creature *crt_ptr )
 		if(F_ISSET(crt_ptr, PBESRK)) strcat(str, "Berserk, ");
 		if(F_ISSET(crt_ptr, PBARKS)) strcat(str, "Barkskin, ");
 		if(F_ISSET(crt_ptr, PSOUND)) strcat(str, "MSP on, ");
+		if(F_ISSET(crt_ptr, PATTUNE)) strcat(str, "Attune, ");
 		if(F_ISSET(crt_ptr, PPLDGK)) {
 			sprintf(temp, "%s ",
 				cur_guilds[check_guild(crt_ptr)].name);
@@ -752,11 +753,32 @@ int stat_crt(creature *ply_ptr, creature *crt_ptr )
 
 	}
 	else {
+		sprintf(g_buffer, 
+			"Sharp: %ld Thrust: %ld Blunt: %ld Pole: %ld Missile: %ld Hand: %ld\n",
+			crt_ptr->proficiency[0], crt_ptr->proficiency[1],
+			crt_ptr->proficiency[2], crt_ptr->proficiency[3],
+			crt_ptr->proficiency[4], crt_ptr->proficiency[5]);
+		output(fd, g_buffer );
 		sprintf(g_buffer,
+			"Earth: %ld   Wind: %ld   Fire: %ld  Water: %ld\n",
+			crt_ptr->realm[0], crt_ptr->realm[1],
+			crt_ptr->realm[2], crt_ptr->realm[3]);
+		output(fd, g_buffer );
+
+		sprintf(g_buffer,
+			"Dtect: %ld   Prot: %ld   Clrc: %ld  Srcry: %ld\n",
+			crt_ptr->realm[4], crt_ptr->realm[5],
+			crt_ptr->realm[6], crt_ptr->realm[7]);
+		output(fd, g_buffer );
+
+		sprintf(g_buffer, "special: %ld \n", crt_ptr->special);
+		output(fd, g_buffer);
+
+		/*sprintf(g_buffer,
                        "Earth: %ld    Wind: %ld   Fire: %ld  Water: %ld\n",
                        crt_ptr->realm[0], crt_ptr->realm[1],
                        crt_ptr->realm[2], crt_ptr->realm[3]);
-		output(fd, g_buffer );
+		output(fd, g_buffer );*/
 
 		if(F_ISSET(crt_ptr, MPERMT)) strcat(str, "Perm, ");
 		if(F_ISSET(crt_ptr, MINVIS)) strcat(str, "Invis, ");
@@ -841,6 +863,19 @@ int stat_crt(creature *ply_ptr, creature *crt_ptr )
 		if(F_ISSET(crt_ptr, MCONJU) ) strcat(str, "Conjured, ");
 		if(F_ISSET(crt_ptr, MTEAMM) ) strcat(str, "Team member, ");
 		if(F_ISSET(crt_ptr, MTEAML) ) strcat(str, "Team leader, ");
+		if(F_ISSET(crt_ptr, MDEALSSHARP) ) strcat(str, "Sharp Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSTHRUST) ) strcat(str, "Thrust Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSBLUNT) ) strcat(str, "Blunt Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSPOLE) ) strcat(str, "Pole Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSMISSILE) ) strcat(str, "Missile Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSHAND) ) strcat(str, "Barehand Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSEARTH) ) strcat(str, "Earth Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSWIND) ) strcat(str, "Wind Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSFIRE) ) strcat(str, "Fire Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSWATER) ) strcat(str, "Water Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSPOISON) ) strcat(str, "Poison Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSMAGIC) ) strcat(str, "Magic Damage, ");
+		if(F_ISSET(crt_ptr, MDEALSDIVINE) ) strcat(str, "Divine Damage, ");
 	}
 
 	if(strlen(str) > 11) {
@@ -997,6 +1032,14 @@ int stat_obj(creature *ply_ptr, object *obj_ptr )
 	output(fd, g_buffer);
 	sprintf(g_buffer, "   Magic: %2.2d", obj_ptr->magicpower);
 	output(fd, g_buffer);
+	sprintf(g_buffer, "\nRealm: %2.2d", obj_ptr->magicrealm);
+	output(fd, g_buffer);
+	sprintf(g_buffer, "  special: %2.2d", obj_ptr->special);
+	output(fd, g_buffer);
+	sprintf(g_buffer, "  special1: %2.2d", obj_ptr->special1);
+	output(fd, g_buffer);
+	sprintf(g_buffer, "special2: %2.2d \n", obj_ptr->special2);
+	output(fd, g_buffer);
 
 	if(F_ISSET(obj_ptr,OADDSA)) {
 	   sprintf(g_buffer, "\nStr: %d  Dex: %d  Int: %d  Pie: %d  Con: %d\n",
@@ -1103,7 +1146,16 @@ int stat_obj(creature *ply_ptr, object *obj_ptr )
 	}
 	if (F_ISSET(obj_ptr, OMONKO)) strcat(str, "Monk, ");
 	if (F_ISSET(obj_ptr, OADDSA)) strcat(str, "SetsAttribute, ");
-	if (F_ISSET(obj_ptr, ONOSEL)) strcat(str, "UnSellable, ");
+	
+	if (F_ISSET(obj_ptr, OGIVESAC)) strcat(str, "Gives AC, ");
+	if (F_ISSET(obj_ptr, OGIVESDR)) strcat(str, "Gives DR, ");
+	if (F_ISSET(obj_ptr, ORESIST1)) strcat(str, "Grants 1st resistance, ");
+	if (F_ISSET(obj_ptr, ORESIST2)) strcat(str, "Grants 2nd resistance, ");
+	if (F_ISSET(obj_ptr, OREQUIRESSTR)) strcat(str, "Requires STR, ");
+	if (F_ISSET(obj_ptr, OREQUIRESDEX)) strcat(str, "Requires DEX, ");
+	if (F_ISSET(obj_ptr, OREQUIRESCON)) strcat(str, "Requires CON, ");
+	if (F_ISSET(obj_ptr, OREQUIRESINT)) strcat(str, "Requires INT, ");
+	if (F_ISSET(obj_ptr, OREQUIRESPTY)) strcat(str, "Requires PTY, ");
 	
 
 	if(strlen(str) > 11) {
@@ -1115,10 +1167,22 @@ int stat_obj(creature *ply_ptr, object *obj_ptr )
 
 	output_nl(fd, str);
 
+	if (!F_ISSET(obj_ptr, OADDSA)){
+		output(fd, "Resistances / Damage types: \n");
+		sprintf(str, "");
+		for(i=0;i<16;i++){
+			sprintf(g_buffer, "%d, ", obj_ptr->sets_flag[i]);
+			strcat(str, g_buffer);
+		}
+		str[strlen(str)-2] = '.';
+		str[strlen(str)-1] = 0;
+		output(fd,str);
+	}
+	
 
 	if(F_ISSET(obj_ptr, OADDSA)) {
 	  sprintf(str, "Sets Pflags: ");
-	  for(i=0;i<128;i++) {
+	  for(i=0;i<256;i++) {
 		if(FS_ISSET(obj_ptr,i)) {
 			sprintf(g_buffer,"%d, ",i+1);
 			strcat(str, g_buffer);
