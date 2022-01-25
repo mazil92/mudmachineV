@@ -5,7 +5,11 @@
  *
  *	Copyright (C) 1991, 1992, 1993 Brooke Paul
  *
- * $Id: command8.c,v 6.18 2001/07/08 20:28:02 develop Exp $
+ 24/01/2022:
+ added the proper weapon damage to bash
+ * 
+
+ $Id: command8.c,v 6.18 2001/07/08 20:28:02 develop Exp $
  *
  * $Log: command8.c,v $
  * Revision 6.18  2001/07/08 20:28:02  develop
@@ -574,9 +578,9 @@ int bash( creature *ply_ptr, cmd *cmnd )
 		if(mrand(1,20) >= n) {
 
 			crt_ptr->lasttime[LT_ATTCK].ltime = t;
-			crt_ptr->lasttime[LT_ATTCK].interval = mrand(5,8);
+			crt_ptr->lasttime[LT_ATTCK].interval = mrand(5,MIN(7,(ply_ptr->strength/2)));
 			crt_ptr->lasttime[LT_SPELL].ltime = t;
-                        crt_ptr->lasttime[LT_SPELL].interval = mrand(7,10);
+                        crt_ptr->lasttime[LT_SPELL].interval = mrand(7,MIN(10,(ply_ptr->strength/2)));
 			
 			if(ply_ptr->ready[WIELD-1])
 				n = mdice(ply_ptr->ready[WIELD-1]) / 2;
@@ -621,16 +625,19 @@ int bash( creature *ply_ptr, cmd *cmnd )
 				}
 			}
 
-			crt_ptr->hpcur -= n;
+			
+			
 
-			sprintf(g_buffer, "You bash for %d damage.\n", n);
+			sprintf(g_buffer, "You bash with all your might\n");
 			output(fd, g_buffer);
 
 			broadcast_rom2(fd, crt_ptr->fd, crt_ptr->rom_num, 
 				       "%M bashes %m.", m2args(ply_ptr, crt_ptr));
 
-			sprintf(g_buffer, "%%M bashed you for %d damage.\n", n);
+			sprintf(g_buffer, "%%M bashed you.\n");
 			mprint(crt_ptr->fd, g_buffer, m1arg(ply_ptr) );
+
+			combat_output(ply_ptr, crt_ptr, n);
 
 			/* handle shot reduction */
 			attack_with_weapon( ply_ptr );

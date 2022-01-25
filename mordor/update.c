@@ -6,7 +6,12 @@
  *
  * $Id: update.c,v 6.36 2001/07/17 19:28:44 develop Exp $
  *
- * $Log: update.c,v $
+ *
+21/01/2022
+added attune
+love smithy
+
+  $Log: update.c,v $
  * Revision 6.36  2001/07/17 19:28:44  develop
  * *** empty log message ***
  *

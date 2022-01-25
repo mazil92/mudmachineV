@@ -9,6 +9,12 @@
  * $Id: command4.c,v 6.21 2021/09/25 03:00:00 develop tnl, hp, mp $
  *
  * $Log: command4.c,v $
+
+10/01/2021
+added DR stuff to info page
+
+ 09/01/2021
+ added resistances to info page
  *
  * Revision 6.21  2021/09/25 03:00:00  develop
  * tnl, hp, mp functions added
@@ -366,10 +372,14 @@ int info( creature *ply_ptr, cmd *cmnd )
 	output(fd, g_buffer);
 	sprintf(g_buffer, "\nArmour class[AC]:     %-4d          ", ply_ptr->armor/10);
 	output(fd, g_buffer);
-	sprintf(g_buffer, "Inventory Weight: %-4d Lbs/%-3d Objs\n", weight_ply(ply_ptr), cnt);
+	sprintf(g_buffer, "Inventory Weight: %-4d Lbs/%-3d Objs", weight_ply(ply_ptr), cnt);
+	output(fd, g_buffer);
+	sprintf(g_buffer, "\nDamage Reduction[DR]: %-4d	 ", compute_DR_player(ply_ptr)/10 );
+	output(fd, g_buffer);
+	sprintf(g_buffer, "Reduction Confidence: %-4d - 100%%", armor_confidence(ply_ptr));
 	output(fd, g_buffer);
 
-	output(fd, "\nProficiencies:                                                          ");
+	output(fd, "\n \nProficiencies:                                                          ");
 	sprintf(g_buffer, "\nSharp:  %2d%% ", profic(ply_ptr, SHARP));
 	output(fd, g_buffer);
 	sprintf(g_buffer, "Thrust: %2d%% ", profic(ply_ptr, THRUST));
@@ -400,6 +410,63 @@ int info( creature *ply_ptr, cmd *cmnd )
 	output(fd, g_buffer);
 	sprintf(g_buffer, "Sorcery:  %3d%%		\n", mprofic(ply_ptr, SORCERY));
 	output(fd, g_buffer);
+
+	output(fd, "\n\n RESISTANCES:													");
+	ANSI(fd, AM_LOWINTESITY);
+	ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, "\n SH: %2d%%   ",  compute_resistance_player(ply_ptr, DSHARP));
+	output(fd, g_buffer);
+	ANSI(fd, AM_ITALIC);
+	ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, "TH: %2d%%   ",  compute_resistance_player(ply_ptr, DTHRUST));
+	output(fd, g_buffer);
+	ANSI(fd, AM_BOLD);
+	ANSI(fd, AFC_BLACK);
+	sprintf(g_buffer, "BL: %2d%%   ",  compute_resistance_player(ply_ptr, DBLUNT));
+	output(fd, g_buffer);
+	ANSI(fd, AM_ITALIC);
+	ANSI(fd, AFC_YELLOW);
+	sprintf(g_buffer, "PL: %2d%%   ",  compute_resistance_player(ply_ptr, DPOLE));
+	output(fd, g_buffer);
+	ANSI(fd, AM_UNDERLINE);
+	ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, "MI: %2d%%   ",  compute_resistance_player(ply_ptr, DMISSILE));
+	output(fd, g_buffer);
+	ANSI(fd, AM_NORMAL);
+	ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, "BH: %2d%%   ",  compute_resistance_player(ply_ptr, DHAND));
+	output(fd, g_buffer);
+	ANSI(fd, AM_LOWINTESITY);
+	ANSI(fd, AFC_GREEN);
+	sprintf(g_buffer, "\n EA: %2d%%   ",  compute_resistance_player(ply_ptr, DEARTH));
+	output(fd, g_buffer);
+	ANSI(fd, AM_LOWINTESITY);
+	ANSI(fd, AFC_CYAN);
+	sprintf(g_buffer, "WI: %2d%%   ",  compute_resistance_player(ply_ptr, DWIND));
+	output(fd, g_buffer);
+	ANSI(fd, AM_BOLD);
+	ANSI(fd, AFC_RED);
+	sprintf(g_buffer, "FI: %2d%%   ",  compute_resistance_player(ply_ptr, DFIRE));
+	output(fd, g_buffer);
+	ANSI(fd, AM_BOLD);
+	ANSI(fd, AFC_BLUE);
+	sprintf(g_buffer, "WA: %2d%%   ",  compute_resistance_player(ply_ptr, DWATER));
+	output(fd, g_buffer);
+	ANSI(fd, AM_REVERSE);
+	ANSI(fd, AFC_GREEN);
+	sprintf(g_buffer, "\nPOISON: %2d%%   ",  compute_resistance_player(ply_ptr, DPOISON));
+	output(fd, g_buffer);
+	ANSI(fd, AM_BOLD);
+	ANSI(fd, AFC_MAGENTA);
+	sprintf(g_buffer, "MAGIC: %2d%%   ",  compute_resistance_player(ply_ptr, DMAGIC));
+	output(fd, g_buffer);
+	ANSI(fd, AM_BOLD);
+	ANSI(fd, AFC_YELLOW);
+	sprintf(g_buffer, "DIVINE: %2d%%   ",  compute_resistance_player(ply_ptr, DDIVINE));
+	output(fd, g_buffer);
+	ANSI(fd, AM_NORMAL);
+	ANSI(fd, AFC_WHITE);
+
 
 	
 	F_SET(ply_ptr, PREADI);
@@ -1224,10 +1291,10 @@ int to_next_level( creature *ply_ptr, cmd *cmnd )
 			expneeded = (long)((needed_exp[MAXALVL-1]*ply_ptr->level));
 
 
-	if(F_ISSET(ply_ptr, PSILNC)) {
+	/*if(F_ISSET(ply_ptr, PSILNC)) {
 		output_wc(fd, "Your lips move but no sound comes forth.\n", SILENCECOLOR);
 		return(0);
-	}
+	}*/
 
 	/* spam check */
 	if ( check_for_spam( ply_ptr ) )
@@ -1236,13 +1303,8 @@ int to_next_level( creature *ply_ptr, cmd *cmnd )
 	}
 
 	F_CLR(ply_ptr, PHIDDN);
-	if(F_ISSET(ply_ptr, PLECHO))
-	{
-		sprintf(g_buffer, "You say, my tnl is \"%-9lu\"\n", MAX(0,expneeded-ply_ptr->experience));
-		output_wc(fd, g_buffer, ECHOCOLOR );
-	}
-	else
-		output(fd, "Ok.\n");
+	sprintf(g_buffer, "You say, my tnl is \"%-9lu\"\n", MAX(0,expneeded-ply_ptr->experience));
+	output_wc(fd, g_buffer, ECHOCOLOR );
 
 	sprintf(g_buffer, "%%M says, my tnl is \"%-9lu.\"", MAX(0,expneeded-ply_ptr->experience));
 	broadcast_rom(fd, rom_ptr->rom_num, g_buffer, m1arg(ply_ptr));
@@ -1267,10 +1329,10 @@ int say_hp( creature *ply_ptr, cmd *cmnd )
 			expneeded = (long)((needed_exp[MAXALVL-1]*ply_ptr->level));
 
 
-	if(F_ISSET(ply_ptr, PSILNC)) {
+	/*if(F_ISSET(ply_ptr, PSILNC)) {
 		output_wc(fd, "Your lips move but no sound comes forth.\n", SILENCECOLOR);
 		return(0);
-	}
+	}*/
 
 	/* spam check */
 	if ( check_for_spam( ply_ptr ) )
@@ -1279,13 +1341,9 @@ int say_hp( creature *ply_ptr, cmd *cmnd )
 	}
 
 	F_CLR(ply_ptr, PHIDDN);
-	if(F_ISSET(ply_ptr, PLECHO))
-	{
-		sprintf(g_buffer, "You say, my HP is %5d/%-5d\"\n", ply_ptr->hpcur, ply_ptr->hpmax);
-		output_wc(fd, g_buffer, ECHOCOLOR );
-	}
-	else
-		output(fd, "Ok.\n");
+	sprintf(g_buffer, "You say, my HP is %5d/%-5d\"\n", ply_ptr->hpcur, ply_ptr->hpmax);
+	output_wc(fd, g_buffer, ECHOCOLOR );
+	
 
 	sprintf(g_buffer, "%%M says, my HP is %5d/%-5d\"", ply_ptr->hpcur, ply_ptr->hpmax);
 	broadcast_rom(fd, rom_ptr->rom_num, g_buffer, m1arg(ply_ptr));
@@ -1310,10 +1368,10 @@ int say_mp( creature *ply_ptr, cmd *cmnd )
 			expneeded = (long)((needed_exp[MAXALVL-1]*ply_ptr->level));
 
 
-	if(F_ISSET(ply_ptr, PSILNC)) {
+	/*if(F_ISSET(ply_ptr, PSILNC)) {
 		output_wc(fd, "Your lips move but no sound comes forth.\n", SILENCECOLOR);
 		return(0);
-	}
+	}*/
 
 	/* spam check */
 	if ( check_for_spam( ply_ptr ) )
@@ -1322,14 +1380,9 @@ int say_mp( creature *ply_ptr, cmd *cmnd )
 	}
 
 	F_CLR(ply_ptr, PHIDDN);
-	if(F_ISSET(ply_ptr, PLECHO))
-	{
-		sprintf(g_buffer, "You say, my MP is %5d/%-5d\"\n", ply_ptr->mpcur, ply_ptr->mpmax);
-		output_wc(fd, g_buffer, ECHOCOLOR );
-	}
-	else
-		output(fd, "Ok.\n");
-
+	sprintf(g_buffer, "You say, my MP is %5d/%-5d\"\n", ply_ptr->mpcur, ply_ptr->mpmax);
+	output_wc(fd, g_buffer, ECHOCOLOR );
+	
 	sprintf(g_buffer, "%%M says, my MP is %5d/%-5d\"", ply_ptr->mpcur, ply_ptr->mpmax);
 	broadcast_rom(fd, rom_ptr->rom_num, g_buffer, m1arg(ply_ptr));
 

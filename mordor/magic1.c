@@ -6,7 +6,11 @@
  *
  *  Copyright (C) 1991, 1992, 1993 Brooke Paul
  *
- * $Id: magic1.c,v 6.13 2001/03/08 16:09:09 develop Exp $
+ *
+21/01/2022: Added damage types to ospells
+
+love smithy
+  $Id: magic1.c,v 6.13 2001/03/08 16:09:09 develop Exp $
  *
  * $Log: magic1.c,v $
  * Revision 6.13  2001/03/08 16:09:09  develop
@@ -30,7 +34,7 @@ int cast(creature *ply_ptr, cmd *cmnd )
 {
     time_t    i, t;
     int (*fn)();
-    int fd, splno, c = 0, match = 0, n;
+    int fd, splno, c = 0, match = 0, n, spellnumber;
 
     fd = ply_ptr->fd;
 
@@ -76,6 +80,7 @@ int cast(creature *ply_ptr, cmd *cmnd )
     }
 
 	t = time(0);
+    spellnumber = get_spell_number(cmnd);
 
 	if ( ply_ptr->class < DM )
 	{
@@ -104,14 +109,18 @@ int cast(creature *ply_ptr, cmd *cmnd )
         n = (*fn)(ply_ptr, cmnd, CAST);
 
     if(n) {
-	ply_ptr->lasttime[LT_READS].ltime = t;
-        ply_ptr->lasttime[LT_SPELL].ltime = t;
-        if(ply_ptr->class == ALCHEMIST || ply_ptr->class == MAGE)
+	   ply_ptr->lasttime[LT_READS].ltime = t;
+       ply_ptr->lasttime[LT_SPELL].ltime = t;
+       if(ply_ptr->class == ALCHEMIST || ply_ptr->class == MAGE)
             ply_ptr->lasttime[LT_SPELL].interval = 3;
-        else if(ply_ptr->class == BARD || ply_ptr->class == CLERIC || ply_ptr->class == DRUID)
-	    ply_ptr->lasttime[LT_SPELL].interval = 4;
-	else
+       else if(ply_ptr->class == BARD || ply_ptr->class == CLERIC || ply_ptr->class == DRUID)
+	   ply_ptr->lasttime[LT_SPELL].interval = 4;
+	   else
             ply_ptr->lasttime[LT_SPELL].interval = 5;
+    
+    if (F_ISSET(ply_ptr, PATTUNE)){
+        ply_ptr->lasttime[LT_SPELL].interval -= 1;
+    }
     }
 
     return(0);
@@ -687,6 +696,9 @@ int zap(creature *ply_ptr, cmd *cmnd )
 
     ply_ptr->lasttime[LT_SPELL].ltime = t;
     ply_ptr->lasttime[LT_SPELL].interval = 3;
+    if (F_ISSET(ply_ptr, PATTUNE)){
+        ply_ptr->lasttime[LT_SPELL].interval -= 1;
+    }
 
     if(spell_fail(ply_ptr, WAND)){
         obj_ptr->shotscur--;
@@ -749,11 +761,17 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
 {
     creature    *crt_ptr;
     room        *rom_ptr;
-    int     m, fd, dmg, bns=0;
+    int     m, fd, dmg, bns=0, damage_type, spellnumber;
     long        addrealm;
+    float temp1;
 
     fd = ply_ptr->fd;
     rom_ptr = ply_ptr->parent_rom;
+
+    /*detect damage type here*/
+    spellnumber = get_spell_number(spellname);
+    damage_type = spell_damage_type(spellnumber);
+
 
     if(ply_ptr->mpcur < osp->mp && how == CAST) {
         output(fd, "Not enough magic points.\n");
@@ -776,6 +794,8 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
         broadcast_rom(fd, ply_ptr->rom_num, "%M fades into view.",
                   m1arg(ply_ptr));
     }
+    
+
 
     if(how == CAST) switch(osp->bonus_type) {
     case 1:
@@ -821,6 +841,16 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
     if(cmnd->num == 2) {
 
         dmg = dice(osp->ndice, osp->sdice, osp->pdice+bns);
+        /*ADD DAMAGE TYPE CALCS HERE*/
+        
+
+        temp1 = calc_damage((float)dmg, (float)compute_DR_player(ply_ptr), (float)compute_resistance_player(ply_ptr, damage_type), (float)armor_confidence(ply_ptr));
+        
+        /*sprintf(g_buffer, "%f, %f, %f, %f, %f", (float)dmg, (float)compute_DR_player(ply_ptr), (float)compute_resistance_player(ply_ptr, damage_type), (float)armor_confidence(ply_ptr));
+        output(fd, g_buffer);*/
+
+        dmg = (int)temp1;
+
         dmg = MAX(1, dmg);
 
         ply_ptr->hpcur -= dmg;
@@ -834,6 +864,8 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
             output(fd, g_buffer);
             sprintf(g_buffer, "The spell did %d damage.\n", dmg);
             output(fd, g_buffer);
+            
+            
             sprintf(g_buffer, "%%M casts a %s spell on %sself.", 
 				spellname, F_ISSET(ply_ptr, PMALES) ? "him":"her");
             broadcast_rom(fd, ply_ptr->rom_num, 
@@ -843,6 +875,12 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
             output(fd, "Yuck! That's terrible!\n");
             sprintf(g_buffer, "%d hit points removed.\n", dmg);
             output(fd, g_buffer);
+            
+
+        }
+        /*ADD DAMAGE TYPE OUTPUT HERE*/
+        if (ply_ptr->type == PLAYER){
+            damage_outputter(ply_ptr, dmg, damage_type);
         }
 
         if(ply_ptr->hpcur < 1) {
@@ -919,7 +957,26 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
         }
 
         dmg = dice(osp->ndice, osp->sdice, osp->pdice+bns);
+        
+        if (crt_ptr->type == PLAYER){
+            temp1 = calc_damage((float)dmg, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, damage_type), (float)armor_confidence(crt_ptr));
+        
+        }
+        else{
+            temp1 = calc_damage((float)dmg, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, damage_type), (float)armor_confidence(crt_ptr));
+        
+        }
+        /*sprintf(g_buffer, "%f, %f, %f, %f, %f", (float)dmg, (float)compute_DR_player(ply_ptr), (float)compute_resistance_player(ply_ptr, damage_type), (float)armor_confidence(ply_ptr));
+        output(fd, g_buffer);*/
+
+        dmg = (int)temp1;
+
         dmg = MAX(1, dmg);
+
+        /*ADD DAMAGE TYPE CALCS HERE*/
+
+
+
 
         if((crt_ptr->type == PLAYER && F_ISSET(crt_ptr, PRMAGI)) ||
            (crt_ptr->type != PLAYER && F_ISSET(crt_ptr, MRMAGI)))
@@ -947,6 +1004,10 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
             output(fd, g_buffer);
             sprintf(g_buffer, "The spell did %d damage.\n", dmg);
             output(fd, g_buffer);
+            /*ADD DAMAGE TYPE OUTPUT HERE*/
+            if (ply_ptr->type == PLAYER){
+                damage_outputter(ply_ptr, dmg, damage_type);
+            }
 
             sprintf(g_buffer, "%%M casts a %s spell on %%m.",
                        spellname);
@@ -959,6 +1020,11 @@ int offensive_spell(creature *ply_ptr, cmd *cmnd, int how, char *spellname, osp_
                   "%%M casts a %s spell on you for %d damage.\n",
                   spellname, dmg);
             mprint(crt_ptr->fd, g_buffer, m1arg(ply_ptr));
+            /*ADD DAMAGE TYPE OUTPUT HERE*/
+
+            if (crt_ptr->type == PLAYER) {
+                damage_outputter(crt_ptr, dmg, damage_type);
+            }
 
 			/* give players exp for being hit if the monster is killed */
 			if ( crt_ptr->type == PLAYER && ply_ptr->type == MONSTER )

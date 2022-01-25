@@ -38,10 +38,11 @@ int main()
 		posit(12,30); printf("3. Edit Room");
 		posit(13,30); printf("4. Edit Player");
 		posit(14,30); printf("5. Quit");
+		posit(16,29); printf("6. Convert FROM csv database");
+		posit(17,29); printf("7. Convert TO csv database");
+		posit(19,30); printf("Choice: ");
 
-		posit(16,30); printf("Choice: ");
-
-		getnum(&i, 1, 5);
+		getnum(&i, 1, 7);
 
 		switch(i) {
 		case 1:
@@ -58,10 +59,444 @@ int main()
 			break;
 		case 5:
 			exit(0);
+			break;
+		case 6:
+			convert_from_csv();
+			break;
+		case 7:
+			convert_to_csv();
+			break;
 		}
 	}
 
 	return(0);
+}
+
+void convert_from_csv(){
+	clearscreen();
+	posit(3,20); printf("Converting from csv");
+	return;
+}
+
+void convert_to_csv(){
+	clearscreen();
+	posit(3,20); printf("Converting to csv");
+
+	int i, j, m, n, o, p, q, r;
+	int flags0 = 0, flags1 = 0, flags2 = 0, flags3 = 0, flags4 = 0, flags5 = 0, flags6 = 0, flags7 = 0, flags8 = 0, flags9 = 0, flags10 = 0, flags11 = 0, flags12 = 0, flags13 = 0, flags14 = 0, flags15 = 0;
+	int spells0 = 0, spells1 = 0, spells2 = 0, spells3 = 0, spells4 = 0, spells5 = 0, spells6 = 0, spells7 = 0, spells8 = 0, spells9 = 0, spells10 = 0, spells11 = 0, spells12 = 0, spells13 = 0, spells14 = 0, spells15 = 0;
+	int quests0 = 0, quests1 = 0, quests2 = 0, quests3 = 0, quests4 = 0, quests5 = 0, quests6 = 0, quests7 = 0, quests8 = 0, quests9 = 0, quests10 = 0, quests11 = 0, quests12 = 0, quests13 = 0, quests14 = 0, quests15 = 0;
+	
+	posit(4,20); printf("converting monsters");
+	FILE *fpt;
+	fpt = fopen("monsters_datatbase.csv", "w+");
+	fprintf(fpt, "ID; name; description; talk; password; key0; key1; key2; fd; level; type; class; race; numwander; alignment; strength; dexterity; constitution; intelligence; piety; hpmax; hpcur; mpmax; mpcur; armor; thaco; experience; gold; ndice; sdice; pdice; special; proficiency0; proficiency1; proficiency2; proficiency3; proficiency4; proficiency5; realm0; realm1; realm2; realm3; realm4; realm5; realm6; realm7; spells0; spells1; spells2; spells3; spells4; spells5; spells6; spells7; spells8; spells9; spells10; spells11; spells12; spells13; spells14; spells15; flags0; flags1; flags2; flags3; flags4; flags5; flags6; flags7; flags8; flags9; flags10; flags11; flags12; flags13; flags14; flags15; quests0; quests1; quests2; quests3; quests4; quests5; quests6; quests7; quests8; quests9; quests10; quests11; quests12; quests13; quests14; quests15; questnum; carry0; carry1; carry2; carry3; carry4; carry5; carry6; carry7; carry8; carry9; rom_num; bank_balance; title; misc_stats0; misc_stats1; misc_stats2; misc_stats3; misc_stats4; clanindex; clanexp; guildtype; guildexp; special1; special2\n");
+
+
+	creature *crt_ptr;
+	for (i=0, j=0; i<5000; i++){
+		
+		if (load_crt(i, &crt_ptr) > -1) {
+		load_crt_from_file(i, &crt_ptr);
+
+		posit(5,20); printf("converting monster %i\n", i);
+
+		/*flag check, be sure to incement 'm' when you add more flags!*/
+		for (m=0, n=0; m<128; m++){
+			switch (n){
+					case 0: flags0 = 0;
+					case 1: flags1 = 0;
+					case 2: flags2 = 0;
+					case 3: flags3 = 0;
+					case 4: flags4 = 0;
+					case 5: flags5 = 0;
+					case 6: flags6 = 0;
+					case 7: flags7 = 0;
+					case 8: flags8 = 0;
+					case 9: flags9 = 0;
+					case 10: flags10 = 0;
+					case 11: flags11 = 0;
+					case 12: flags12 = 0;
+					case 13: flags13 = 0;
+					case 14: flags14 = 0;
+					case 15: flags15 = 0;
+				}
+			if (F_ISSET(crt_ptr, m)){
+				switch (n){
+					case 0: flags0 = m;
+					case 1: flags1 = m;
+					case 2: flags2 = m;
+					case 3: flags3 = m;
+					case 4: flags4 = m;
+					case 5: flags5 = m;
+					case 6: flags6 = m;
+					case 7: flags7 = m;
+					case 8: flags8 = m;
+					case 9: flags9 = m;
+					case 10: flags10 = m;
+					case 11: flags11 = m;
+					case 12: flags12 = m;
+					case 13: flags13 = m;
+					case 14: flags14 = m;
+					case 15: flags15 = m;
+				}
+				n++;
+
+			}
+		}
+		/*spell check, be sure to incement 'm' when you add more flags!*/
+		for (o=0, p=0; o<128; o++){
+			switch (p){
+					case 0: spells0 = 0;
+					case 1: spells1 = 0;
+					case 2: spells2 = 0;
+					case 3: spells3 = 0;
+					case 4: spells4 = 0;
+					case 5: spells5 = 0;
+					case 6: spells6 = 0;
+					case 7: spells7 = 0;
+					case 8: spells8 = 0;
+					case 9: spells9 = 0;
+					case 10: spells10 = 0;
+					case 11: spells11 = 0;
+					case 12: spells12 = 0;
+					case 13: spells13 = 0;
+					case 14: spells14 = 0;
+					case 15: spells15 = 0;
+				}
+			if (S_ISSET(crt_ptr, o)){
+				switch (p){
+					case 0: spells0 = o;
+					case 1: spells1 = o;
+					case 2: spells2 = o;
+					case 3: spells3 = o;
+					case 4: spells4 = o;
+					case 5: spells5 = o;
+					case 6: spells6 = o;
+					case 7: spells7 = o;
+					case 8: spells8 = o;
+					case 9: spells9 = o;
+					case 10: spells10 = o;
+					case 11: spells11 = o;
+					case 12: spells12 = o;
+					case 13: spells13 = o;
+					case 14: spells14 = o;
+					case 15: spells15 = o;
+				}
+				p++;
+
+			}
+		}
+		/*quests check, be sure to incement 'm' when you add more flags!*/
+		for (q=0, r=0; q<128; q++){
+			switch (r){
+					case 0: quests0 = 0;
+					case 1: quests1 = 0;
+					case 2: quests2 = 0;
+					case 3: quests3 = 0;
+					case 4: quests4 = 0;
+					case 5: quests5 = 0;
+					case 6: quests6 = 0;
+					case 7: quests7 = 0;
+					case 8: quests8 = 0;
+					case 9: quests9 = 0;
+					case 10: quests10 = 0;
+					case 11: quests11 = 0;
+					case 12: quests12 = 0;
+					case 13: quests13 = 0;
+					case 14: quests14 = 0;
+					case 15: quests15 = 0;
+				}
+			if (Q_ISSET(crt_ptr, q)){
+				switch (r){
+					case 0: quests0 = q;
+					case 1: quests1 = q;
+					case 2: quests2 = q;
+					case 3: quests3 = q;
+					case 4: quests4 = q;
+					case 5: quests5 = q;
+					case 6: quests6 = q;
+					case 7: quests7 = q;
+					case 8: quests8 = q;
+					case 9: quests9 = q;
+					case 10: quests10 = q;
+					case 11: quests11 = q;
+					case 12: quests12 = q;
+					case 13: quests13 = q;
+					case 14: quests14 = q;
+					case 15: quests15 = q;
+				}
+				r++;
+
+			}
+		}
+
+
+		fprintf(fpt, "%i; %s; %s; %s; %s; %s; %s; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i \n",
+		i, crt_ptr->name, crt_ptr->description, crt_ptr->talk, crt_ptr->password, crt_ptr->key[0], crt_ptr->key[1], crt_ptr->key[2], crt_ptr->fd, crt_ptr->level, crt_ptr->type, crt_ptr->class, crt_ptr->race, crt_ptr->numwander, crt_ptr->alignment, crt_ptr->strength, crt_ptr->dexterity, crt_ptr->constitution, crt_ptr->intelligence, crt_ptr->piety, crt_ptr->hpmax, crt_ptr->hpcur, crt_ptr->mpmax, crt_ptr->mpcur, crt_ptr->armor, crt_ptr->thaco, crt_ptr->experience, crt_ptr->gold, crt_ptr->ndice, crt_ptr->sdice, crt_ptr->pdice, crt_ptr->special, crt_ptr->proficiency[0], crt_ptr->proficiency[1], crt_ptr->proficiency[2], crt_ptr->proficiency[3], crt_ptr->proficiency[4], crt_ptr->proficiency[5], crt_ptr->realm[0], crt_ptr->realm[1], crt_ptr->realm[2], crt_ptr->realm[3], crt_ptr->realm[4], crt_ptr->realm[5], crt_ptr->realm[6], crt_ptr->realm[7], spells0, spells1, spells2, spells3, spells4, spells5, spells6, spells7, spells8, spells9, spells10, spells11, spells12, spells13, spells14, spells15, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, quests0, quests1, quests2, quests3, quests4, quests5, quests6, quests7, quests8, quests9, quests10, quests11, quests12, quests13, quests14, quests15, crt_ptr->questnum, crt_ptr->carry[0], crt_ptr->carry[1], crt_ptr->carry[2], crt_ptr->carry[3], crt_ptr->carry[4], crt_ptr->carry[5], crt_ptr->carry[6], crt_ptr->carry[7], crt_ptr->carry[8], crt_ptr->carry[9], crt_ptr->rom_num, crt_ptr->bank_balance, crt_ptr->title, crt_ptr->misc_stats[0], crt_ptr->misc_stats[1], crt_ptr->misc_stats[2], crt_ptr->misc_stats[3], crt_ptr->misc_stats[4], crt_ptr->clanindex, crt_ptr->clanexp, crt_ptr->guildtype, crt_ptr->guildexp, crt_ptr->special1, crt_ptr->special2 );
+	}
+	else {
+		posit(8, 20); printf("error on monster %i \n", i );
+	}
+	}
+
+	fclose(fpt);
+
+	clearscreen();
+	posit(4,20); printf("converting objects");
+	
+	fpt = fopen("objects_datatbase.csv", "w+");
+	fprintf(fpt, "ID; name; description; key0; key1; key2; use; value; weight; type; adjustment; shotsmax; shotscur; ndice; sdice; pdice; armor; wearflag; magicpower; magicrealm; special; flags0; flags1; flags2; flags3; flags4; flags5; flags6; flags7; flags8; flags9; flags10; flags11; flags12; flags13; flags14; flags15; questnum; strength; dexterity; constitution; intelligence; piety; sets_flag0; sets_flag1; sets_flag2; sets_flag3; sets_flag4; sets_flag5; sets_flag6; sets_flag7; sets_flag8; sets_flag9; sets_flag10; sets_flag11; sets_flag12; sets_flag13; sets_flag14; sets_flag15; special1; special2\n");
+
+	object *obj_ptr;
+	for (i=0, j=0; i<5000; i++){
+		
+		if (load_obj(i, &obj_ptr) > -1) {
+		load_obj_from_file(i, &obj_ptr);
+
+		posit(5,20); printf("converting object %i\n", i);
+
+		/*flag check, be sure to incement 'm' when you add more flags!*/
+		for (m=0, n=0; m<128; m++){
+			switch (n){
+					case 0: flags0 = 0;
+					case 1: flags1 = 0;
+					case 2: flags2 = 0;
+					case 3: flags3 = 0;
+					case 4: flags4 = 0;
+					case 5: flags5 = 0;
+					case 6: flags6 = 0;
+					case 7: flags7 = 0;
+					case 8: flags8 = 0;
+					case 9: flags9 = 0;
+					case 10: flags10 = 0;
+					case 11: flags11 = 0;
+					case 12: flags12 = 0;
+					case 13: flags13 = 0;
+					case 14: flags14 = 0;
+					case 15: flags15 = 0;
+				}
+			if (F_ISSET(obj_ptr, m)){
+				switch (n){
+					case 0: flags0 = m;
+					case 1: flags1 = m;
+					case 2: flags2 = m;
+					case 3: flags3 = m;
+					case 4: flags4 = m;
+					case 5: flags5 = m;
+					case 6: flags6 = m;
+					case 7: flags7 = m;
+					case 8: flags8 = m;
+					case 9: flags9 = m;
+					case 10: flags10 = m;
+					case 11: flags11 = m;
+					case 12: flags12 = m;
+					case 13: flags13 = m;
+					case 14: flags14 = m;
+					case 15: flags15 = m;
+				}
+				n++;
+
+			}
+		}
+		
+
+
+		fprintf(fpt, "%i; %s; %s; %s; %s; %s; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i\n", 
+			i, obj_ptr->name, obj_ptr->description, obj_ptr->key[0], obj_ptr->key[1], obj_ptr->key[2], obj_ptr->use_output, obj_ptr->value, obj_ptr->weight, obj_ptr->type, obj_ptr->adjustment, obj_ptr->shotsmax, obj_ptr->shotscur, obj_ptr->ndice, obj_ptr->sdice, obj_ptr->pdice, obj_ptr->armor, obj_ptr->wearflag, obj_ptr->magicpower, obj_ptr->magicrealm, obj_ptr->special, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, obj_ptr->questnum, obj_ptr->strength, obj_ptr->dexterity, obj_ptr->constitution, obj_ptr->intelligence, obj_ptr->piety, obj_ptr->sets_flag[0], obj_ptr->sets_flag[1], obj_ptr->sets_flag[2], obj_ptr->sets_flag[3], obj_ptr->sets_flag[4], obj_ptr->sets_flag[5], obj_ptr->sets_flag[6], obj_ptr->sets_flag[7], obj_ptr->sets_flag[8], obj_ptr->sets_flag[9], obj_ptr->sets_flag[10], obj_ptr->sets_flag[11], obj_ptr->sets_flag[12], obj_ptr->sets_flag[13], obj_ptr->sets_flag[14], obj_ptr->sets_flag[15], obj_ptr->special1, obj_ptr->special2);
+	}
+	else {
+		posit(8, 20); printf("error on object %i \n", i );
+	}
+	}
+	fclose(fpt);
+
+	clearscreen();
+	posit(4,20); printf("converting rooms");
+	
+	fpt = fopen("rooms_datatbase.csv", "w+");
+	fprintf(fpt, "rom_num; name; description; lolevel; hilevel; special; trap; trapexit; track; flags0; flags1; flags2; flags3; flags4; flags5; flags6; flags7; flags8; flags9; flags10; flags11; flags12; flags13; flags14; flags15; random0; random1; random2; random3; random4; random5; random6; random7; random8; random9; traffic; perm0; ptime0; perm1; ptime1; perm2; ptime2; perm3; ptime3; perm4; ptime4; perm5; ptime5; perm6; ptime6; perm7; ptime7; perm8; ptime8; perm9; ptime9; operm0; optime0; operm1; optime1; operm2; optime2; operm3; optime3; operm4; optime4; operm5; optime5; operm6; optime6; operm7; optime7; operm8; optime8; operm9; optime9; beenhere; x1name; x1destination; x1key; x1flag0; x1flag1; x1flag2; x1flag3; x1flag4; x1flag5; x1flag6; x1flag7; x1flag8; x1flag9; x2name; x2destination; x2key; x2flag0; x2flag1; x2flag2; x2flag3; x2flag4; x2flag5; x2flag6; x2flag7; x2flag8; x2flag9; x3name; x3destination; x3key; x3flag0; x3flag1; x3flag2; x3flag3; x3flag4; x3flag5; x3flag6; x3flag7; x3flag8; x3flag9; x4name; x4destination; x4key; x4flag0; x4flag1; x4flag2; x4flag3; x4flag4; x4flag5; x4flag6; x4flag7; x4flag8; x4flag9; x5name; x5destination; x5key; x5flag0; x5flag1; x5flag2; x5flag3; x5flag4; x5flag5; x5flag6; x5flag7; x5flag8; x5flag9; x6name; x6destination; x6key; x6flag0; x6flag1; x6flag2; x6flag3; x6flag4; x6flag5; x6flag6; x6flag7; x6flag8; x6flag9; x7name; x7destination; x7key; x7flag0; x7flag1; x7flag2; x7flag3; x7flag4; x7flag5; x7flag6; x7flag7; x7flag8; x7flag9; x8name; x8destination; x8key; x8flag0; x8flag1; x8flag2; x8flag3; x8flag4; x8flag5; x8flag6; x8flag7; x8flag8; x8flag9\n");
+
+	char xnames[8][20];
+	char str[2000];
+	int len;
+	int xrooms[8];
+	int xkeys[8];
+	int x1flags[10];
+	int x2flags[10];
+	int x3flags[10];
+	int x4flags[10];
+	int x5flags[10];
+	int x6flags[10];
+	int x7flags[10];
+	int x8flags[10];
+
+	room *rom_ptr;
+	xtag *xt;
+	exit_ *exit;
+
+	
+	for (i=0, j=0; i<15000; i++){
+				for (o=0; o<10; o++){
+										
+					x1flags[o] = 0;
+					x2flags[o] = 0;
+					x3flags[o] = 0;
+					x4flags[o] = 0;
+					x5flags[o] = 0;
+					x6flags[o] = 0;
+					x7flags[o] = 0;
+					x8flags[o] = 0;
+					
+				}	
+		
+	if (load_rom(i, &rom_ptr) > -1) {
+		load_rom_from_file(i, &rom_ptr);
+
+		posit(5,20); printf("converting room %i\n", i);
+
+		xt = rom_ptr->first_ext;
+
+		memset(str,0,strlen(str));
+		if (rom_ptr->long_desc){
+		strcpy(str, rom_ptr->long_desc);
+		len = strlen(str);
+			for (m=0; m<len-1; m++){
+				if (str[m] == '\n' || str[m] == ';'){
+					str[m] = ' ';
+				}
+			}
+		}
+		
+		
+		for (m=0, n=0; m<8; m++){
+			
+			strcpy(xnames[m], " ");
+			xrooms[m] = 0;
+			xkeys[m] = 0;
+
+			if (xt){
+				
+				strcpy(xnames[m], xt->ext->name);
+				
+				xrooms[m] = xt->ext->room;
+				xkeys[m] = xt->ext->key;
+				
+				
+				for (o=0, p=0; o<128; o++){
+					if (F_ISSET(xt->ext, o)){
+						if (p < 8){
+							switch (m){
+								case 0: x1flags[p] = o;
+								case 1: x2flags[p] = o;
+								case 2: x3flags[p] = o;
+								case 3: x4flags[p] = o;
+								case 4: x5flags[p] = o;
+								case 5: x6flags[p] = o;
+								case 6: x7flags[p] = o;
+								case 7: x8flags[p] = o;
+							}
+						}
+						p++;
+					}
+				}
+			xt = xt->next_tag;
+			}
+			/*else{
+				
+				strcpy(xnames[m], " ");
+				
+				xrooms[m] = 0;
+				xkeys[m] = 0;
+				for (o=0; o<8; o++){
+					switch (m){
+						case 0: x1flags[o] = 0;
+						case 1: x2flags[o] = 0;
+						case 2: x3flags[o] = 0;
+						case 3: x4flags[o] = 0;
+						case 4: x5flags[o] = 0;
+						case 5: x6flags[o] = 0;
+						case 6: x7flags[o] = 0;
+						case 7: x8flags[o] = 0;
+					}
+				}
+			}*/
+
+			
+			/*if (xt){
+			xt = xt->next_tag;}*/
+			
+		}
+		
+		/*flag check, be sure to incement 'm' when you add more flags!*/
+		for (m=0, n=0; m<128; m++){
+			switch (n){
+					case 0: flags0 = 0;
+					case 1: flags1 = 0;
+					case 2: flags2 = 0;
+					case 3: flags3 = 0;
+					case 4: flags4 = 0;
+					case 5: flags5 = 0;
+					case 6: flags6 = 0;
+					case 7: flags7 = 0;
+					case 8: flags8 = 0;
+					case 9: flags9 = 0;
+					case 10: flags10 = 0;
+					case 11: flags11 = 0;
+					case 12: flags12 = 0;
+					case 13: flags13 = 0;
+					case 14: flags14 = 0;
+					case 15: flags15 = 0;
+				}
+			if (F_ISSET(rom_ptr, m)){
+				switch (n){
+					case 0: flags0 = m;
+					case 1: flags1 = m;
+					case 2: flags2 = m;
+					case 3: flags3 = m;
+					case 4: flags4 = m;
+					case 5: flags5 = m;
+					case 6: flags6 = m;
+					case 7: flags7 = m;
+					case 8: flags8 = m;
+					case 9: flags9 = m;
+					case 10: flags10 = m;
+					case 11: flags11 = m;
+					case 12: flags12 = m;
+					case 13: flags13 = m;
+					case 14: flags14 = m;
+					case 15: flags15 = m;
+				}
+				n++;
+
+			}
+		}
+		
+
+
+		fprintf(fpt, "%i; %s; %s; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i\n",
+		i, rom_ptr->name, str, rom_ptr->lolevel, rom_ptr->hilevel, rom_ptr->special, rom_ptr->trap, rom_ptr->trapexit, rom_ptr->track, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, rom_ptr->random[0], rom_ptr->random[1], rom_ptr->random[2], rom_ptr->random[3], rom_ptr->random[4], rom_ptr->random[5], rom_ptr->random[6], rom_ptr->random[7], rom_ptr->random[8], rom_ptr->random[9], rom_ptr->traffic,
+		rom_ptr->perm_mon[0].misc, rom_ptr->perm_mon[0].interval, rom_ptr->perm_mon[1].misc, rom_ptr->perm_mon[1].interval, rom_ptr->perm_mon[2].misc, rom_ptr->perm_mon[2].interval, rom_ptr->perm_mon[3].misc, rom_ptr->perm_mon[3].interval, rom_ptr->perm_mon[4].misc, rom_ptr->perm_mon[4].interval, rom_ptr->perm_mon[5].misc, rom_ptr->perm_mon[5].interval, rom_ptr->perm_mon[6].misc, rom_ptr->perm_mon[6].interval, rom_ptr->perm_mon[7].misc, rom_ptr->perm_mon[7].interval, rom_ptr->perm_mon[8].misc, rom_ptr->perm_mon[8].interval, rom_ptr->perm_mon[9].misc, rom_ptr->perm_mon[9].interval,
+		rom_ptr->perm_obj[0].misc, rom_ptr->perm_obj[0].interval, rom_ptr->perm_obj[1].misc, rom_ptr->perm_obj[1].interval, rom_ptr->perm_obj[2].misc, rom_ptr->perm_obj[2].interval, rom_ptr->perm_obj[3].misc, rom_ptr->perm_obj[3].interval, rom_ptr->perm_obj[4].misc, rom_ptr->perm_obj[4].interval, rom_ptr->perm_obj[5].misc, rom_ptr->perm_obj[5].interval, rom_ptr->perm_obj[6].misc, rom_ptr->perm_obj[6].interval, rom_ptr->perm_obj[7].misc, rom_ptr->perm_obj[7].interval, rom_ptr->perm_obj[8].misc, rom_ptr->perm_obj[8].interval, rom_ptr->perm_obj[9].misc, rom_ptr->perm_obj[9].interval, 
+		rom_ptr->beenhere, 
+		xnames[0], xrooms[0], xkeys[0], x1flags[0], x1flags[1], x1flags[2], x1flags[3], x1flags[4], x1flags[5], x1flags[6], x1flags[7], x1flags[8], x1flags[9],
+		xnames[1], xrooms[1], xkeys[1], x2flags[0], x2flags[1], x2flags[2], x2flags[3], x2flags[4], x2flags[5], x2flags[6], x2flags[7], x2flags[8], x2flags[9],
+		xnames[2], xrooms[2], xkeys[2], x3flags[0], x3flags[1], x3flags[2], x3flags[3], x3flags[4], x3flags[5], x3flags[6], x3flags[7], x3flags[8], x3flags[9],
+		xnames[3], xrooms[3], xkeys[3], x4flags[0], x4flags[1], x4flags[2], x4flags[3], x4flags[4], x4flags[5], x4flags[6], x4flags[7], x4flags[8], x4flags[9],
+		xnames[4], xrooms[4], xkeys[4], x5flags[0], x5flags[1], x5flags[2], x5flags[3], x5flags[4], x5flags[5], x5flags[6], x5flags[7], x5flags[8], x5flags[9],
+		xnames[5], xrooms[5], xkeys[5], x6flags[0], x6flags[1], x6flags[2], x6flags[3], x6flags[4], x6flags[5], x6flags[6], x6flags[7], x6flags[8], x6flags[9],
+		xnames[6], xrooms[6], xkeys[6], x7flags[0], x7flags[1], x7flags[2], x7flags[3], x7flags[4], x7flags[5], x7flags[6], x7flags[7], x7flags[8], x7flags[9],
+		xnames[7], xrooms[7], xkeys[7], x8flags[0], x8flags[1], x8flags[2], x8flags[3], x8flags[4], x8flags[5], x8flags[6], x8flags[7], x8flags[8], x8flags[9]);
+		
+	}
+	else {
+		posit(8, 20); printf("error on room %i \n", i );
+	}
+	}
+
+	fclose(fpt);
+
+	return;
 }
 
 void edit_object()
@@ -73,7 +508,7 @@ void edit_object()
 
 	clearscreen();
 	posit(3,20); printf("Enter object number to edit: ");
-	getnum(&num, 0, 3000);
+	getnum(&num, 0, 5000);
 
 	load_obj_from_file(num, &obj_ptr);
 
@@ -228,7 +663,7 @@ void edit_monster()
 
 	clearscreen();
 	posit(3,20); printf("Enter creature number to edit: ");
-	getnum(&num, 0, 3000);
+	getnum(&num, 0, 5000);
 
 	load_crt_from_file(num, &crt_ptr);
 	crt_ptr->type = 1;			/* monster */
@@ -497,7 +932,7 @@ void edit_room()
 
 	clearscreen();
 	posit(3,20); printf("Enter room number to edit: ");
-	getnum(&num, 0, 10000);
+	getnum(&num, 0, 15000);
 
 	load_rom_from_file(num, &rom_ptr);
 	rom_ptr->rom_num = num;

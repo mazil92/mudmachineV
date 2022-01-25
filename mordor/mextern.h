@@ -10,6 +10,23 @@
  *
  * $Log: mextern.h,v $
  *
+10/01/2022:
+added from smithycombat:
+player_dealing_damage
+compute_DR_player
+compute_DR_creature
+damage_output
+calc_damage
+
+09/01/2022:
+added from smithycombat:
+compute_resistance_player
+compute_resistance_creature
+
+added from smithyutility:
+identify (spell)
+
+
  18/12/2021: time_output
 get_cmd_number
 cmdlist_size
@@ -82,6 +99,7 @@ canuse
 #endif
 
 #include "mstruct.h"
+
 
 
 #ifndef MIGNORE
@@ -247,14 +265,39 @@ extern char guilds[][30];
 
 typedef int (*SPELLFN)();
 
+/*smithyutility.c*/
+extern int identify(creature *ply_ptr, cmd *cmnd, int how );
+extern int objectives(creature *ply_ptr, cmd *cmnd);
+extern void damage_outputter(creature *ply_ptr, int amount, int damage_type );
+
+/* smithycombat.c */
+extern long compute_resistance_player(creature *ply_ptr, int damage_type);
+extern long compute_resistance_creature(creature *crt_ptr, int damage_type);
+extern double calc_damage (float amt, float DR, float resistance, float confidence );
+extern short compute_DR_player (creature *ply_ptr);
+extern short compute_DR_creature (creature *crt_ptr);
+extern int player_dealing_damage (creature *ply_ptr );
+extern void damage_output (creature *ply_ptr, int damage, int damage_type);
+extern void fade_invis (int fd, creature *ply_ptr);
+extern void attack_cooldown (time_t t, creature *ply_ptr);
+extern void add_attackers (int fd, creature *ply_ptr, creature *crt_ptr);
+extern void do_attacking(int amount, creature *ply_ptr, creature *crt_ptr);
+extern int choose_creature_damage_type(creature *crt_ptr);
+extern int armor_confidence (creature *crt_ptr);
+extern void combat_output (creature *ply_ptr, creature *crt_ptr, int n);
+extern long compute_resistance(creature *crt_ptr, int damage_type);
+extern short compute_DR (creature *crt_ptr);
 
 /* smithycommand1.c */
 extern int midas(creature *ply_ptr, cmd *cmnd);
-extern int can_use ( creature *ply_ptr, cmd *cmnd );
+extern int attune(creature *ply_ptr, cmd *cmnd);
+extern int distill(creature *ply_ptr, cmd *cmnd);
+extern int can_use ( creature *ply_ptr, int cmdno );
 extern int skills (creature *ply_ptr, cmd *cmnd);
 extern char *time_output(time_t duration );
 extern int get_cmd_number(cmd *cmnd);
 extern int cmdlist_size();
+extern int envenom(creature *ply_ptr, cmd *cmnd);
 
 /* ACCESS.C */
 extern char *get_spell_name( int nIndex );

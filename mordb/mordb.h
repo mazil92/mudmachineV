@@ -3,6 +3,14 @@
  * $Id: mordb.h,v 1.15 2001/07/25 02:48:55 develop Exp $
  *
  * $Log: mordb.h,v $
+
+10/01/2022: added mflags to let them deal different damage types
+			added oflags to let weapons deal different bonus damages
+			added oflags to let armor resist different damages
+
+ 09/01/2022: added integers for DAMAGE TYPES
+ 			 added flags to denote an item grants resistance
+
  13/12/2021: added integers for the can_use function
 
  18/12/2021* added realm and proficiency info for spells 
@@ -228,6 +236,9 @@
 #define PSOUND		62	/* MSP use */
 #define PSAVES		63	/* for internal use */
 
+#define PATTUNE		64 /* Player has attuned and has faster casting time*/
+#define PENVENOM	65 /* Player's next hit deals +100% poison */
+
 /* Monster flags */
 #define MPERMT          0       /* Permanent monster */
 #define MHIDDN          1       /* Hidden */
@@ -291,7 +302,22 @@
 #define MCONJU		58	/* monster has been conjured */
 #define MTEAMM		59	/* monster is a member of an attack group */
 #define MTEAML		60	/* monster is the leader of an attack group */
+
 #define MMIDAS		61	/* monster has been midas touched by an alchemist and will drop more gold on death*/
+
+#define MDEALSSHARP		62  /*This monster rolls its dice once for sharp damage*/
+#define MDEALSTHRUST	63  /*as above for Thrust*/
+#define MDEALSBLUNT		64  /*Monsters can deal damage of multiple types*/
+#define MDEALSPOLE		65  /*Just be wary that this will make very potent*/
+#define MDEALSMISSILE	66  /*monster if you enable all 13 flags!*/
+#define MDEALSHAND		67  /**/
+#define MDEALSEARTH		68  /**/
+#define MDEALSWIND		69  /**/
+#define MDEALSFIRE		70  /**/
+#define MDEALSWATER		71  /**/
+#define MDEALSPOISON	72  /**/
+#define MDEALSMAGIC		73  /**/
+#define MDEALSDIVINE	74  /**/
 
 /* Object flags */
 #define OPERMT          0       /* Permanent item (not yet taken) */
@@ -357,6 +383,26 @@
 #define OADDSA		60	/* Adds attribute */
 #define ONOSEL		61	/* cannot be sold at pawn */
 #define OTHEFT		62	/* Stolen object - non-guild theft */
+
+#define OGIVESAC	63	/* armor item grants its armor value to AC*/
+#define OGIVESDR	64	/* armor item grants is armor value to DR*/
+#define OBONUS1DAMAGE 	65	/* weapon item deals bonus damage based on realm and special*/
+#define OBONUS2DAMAGE	66	/* weapon item deals bonus damage based on special1 and special2*/
+#define ONOPHYSICAL		67	/* weapon item does no deal physical damage, only bonus1/2*/
+#define ORESIST1	68	/* armor item grants resistance based on realm and special*/
+#define ORESIST2	69	/* armor item grants resistance based on special1 and special2*/
+/*I think These above 7 flags are made redundant by 75 and 76*/
+
+#define OREQUIRESSTR	70	/* wearable item requries str equal to assigned value*/
+#define OREQUIRESDEX	71	/* as above but for dex*/
+#define OREQUIRESCON	72	/* etc */
+#define OREQUIRESINT	73	/* etc */
+#define OREQUIRESPTY 	74	/* etc */
+
+#define OGRANTSRESIST	75	/*armor item grants resistance according to the sets_flags array*/
+#define OCUSTOMDAMAGE	76	/*weapon item deals various damage types according to the same aray
+Please don't use either of these flags in conjunction with the sets flags flag*/
+
 
 /* Exit flags */
 #define XSECRT          0       /* Secret */
@@ -482,6 +528,22 @@
 #define	SORCERY			8
 #define NOREALM			9
 
+/* Damage Types*/
+#define DSHARP			1
+#define DTHRUST			2
+#define DBLUNT			3
+#define DPOLE			4
+#define DMISSILE		5
+#define DHAND			6
+#define DEARTH			7
+#define DWIND			8
+#define DFIRE			9
+#define DWATER			10
+#define DPOISON			11
+#define DMAGIC			12
+#define DDIVINE			13
+#define MAXDTYPES		13
+
 /* Proficiency Types */
 /* Which formula is used to apply proficiency gain */
 #define DAMAGE          1 /* Proficiency awarded based on damage dealt */
@@ -572,6 +634,9 @@ I do genuinely hope we can get some milage out of this!*/
 #define LT_CONJU	45
 #define LT_MIDAS	46		/* last time you used MIDAS */
 #define LT_INVIS	47
+#define LT_ATTUNE	48
+#define LT_DISTILL	49
+#define LT_ENVENOM	50
 
 /*can_use variables*/
 #define CANUSE 		0

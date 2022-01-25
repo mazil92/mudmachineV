@@ -5,6 +5,10 @@
  *
  *	Copyright (C) 1991, 1992, 1993 Brooke Paul
  *
+09/01/2022: Added ability to set flags up to number 256
+			added ability to set special and realm for objects in-game
+
+
  * $Id: dm3.c,v 6.21 2001/04/29 02:30:26 develop Exp $
  *
  * $Log: dm3.c,v $
@@ -108,7 +112,7 @@ int dm_set_rom(creature	*ply_ptr, cmd *cmnd )
 		return(0);
 	case 'f':
 		num = cmnd->val[2];
-		if(num < 1 || num > 64) return(PROMPT);
+		if(num < 1 || num > 256) return(PROMPT);
 		if(F_ISSET(rom_ptr, num-1)) {
 			F_CLR(rom_ptr, num-1);
 			sprintf(g_buffer, "Room flag #%d off.\n", num);
@@ -165,7 +169,7 @@ int dm_set_crt(creature	*ply_ptr, cmd *cmnd )
 	rom_ptr = ply_ptr->parent_rom;
 
 	if(cmnd->num < 4) {
-		output(fd, "Syntax: *set c <name> <a|con|c|dex|e|f|g|hm|h|int|l|mm|m|\n                       pie|p#|r#|str> [<value>]\n");
+		output(fd, "Syntax: *set c <name> <a|con|c|dex|e|f|g|hm|h|int|l|mm|m|b\n                       pie|p#|r#|str> [<value>]\n");
 		return(0);
 	}
 	
@@ -204,6 +208,13 @@ int dm_set_crt(creature	*ply_ptr, cmd *cmnd )
 			sprintf(crt_ptr->password, "%d", 0);
 		if(crtloaded) {save_ply(crt_ptr); free_crt(crt_ptr);}
 		return(PROMPT);
+	
+	case 'b': {
+		crt_ptr->special = (char) num;
+		output(fd, "special set.\n");return(PROMPT);
+
+	}
+
 	case 'c':
 		if(!strcmp(cmnd->str[3], "con")) {
 			crt_ptr->constitution = (char) cmnd->val[3];
@@ -272,7 +283,7 @@ int dm_set_crt(creature	*ply_ptr, cmd *cmnd )
 		return(0);
 	case 'f':
 		num = cmnd->val[3];
-		if(num < 1 || num > 64) {
+		if(num < 1 || num > 256) {
 			if(crtloaded) {save_ply(crt_ptr); free_crt(crt_ptr);}
 			return(PROMPT);
 		}
@@ -427,7 +438,7 @@ int dm_set_crt(creature	*ply_ptr, cmd *cmnd )
 			return(PROMPT);
 		}
 		num = atoi(&cmnd->str[3][1]);
-		if(num < 0 || num > 4) {
+		if(num < 0 || num > 5) {
 			if(crtloaded) {save_ply(crt_ptr); free_crt(crt_ptr);}
 			return(0);
 		}
@@ -462,7 +473,7 @@ int dm_set_crt(creature	*ply_ptr, cmd *cmnd )
 			return(PROMPT);
 		}
 		num = atoi(&cmnd->str[3][1]);
-		if(num < 0 || num > 3) {
+		if(num < 0 || num > 7) {
 			if(crtloaded) {save_ply(crt_ptr); free_crt(crt_ptr);}
 			return(PROMPT);
 		}
@@ -612,7 +623,7 @@ int dm_set_obj( creature *ply_ptr, cmd *cmnd )
 	rom_ptr = ply_ptr->parent_rom;
 
 	if(cmnd->num < 4) {
-		output(fd, "Syntax: *set o <name> [<crt>] <ad|ar|dn|ds|dp|f|m|q|sm|s|t|v|wg|wr> [<value>]\n");
+		output(fd, "Syntax: *set o <name> [<crt>] <ad|ar|dn|ds|dp|f|m|q|sm|s|t|v|wg|wr|b|k|u|z|x> [<value>]\n");
 		return(0);
 	}
 
@@ -671,6 +682,26 @@ int dm_set_obj( creature *ply_ptr, cmd *cmnd )
 	}
 
 	switch(flags[0]) {
+	case 'b': {
+		obj_ptr->magicrealm = (char) num;
+		output(fd, "realm set\n");return(PROMPT);
+
+	}
+	case 'k': {
+		obj_ptr->special = (char) num;
+		output(fd, "special set\n");return(PROMPT);
+
+	}
+	case 'u': {
+		obj_ptr->special1 = (char) num;
+		output(fd, "special1 set\n");return(PROMPT);
+
+	}
+	case 'z': {
+		obj_ptr->special2 = (char) num;
+		output(fd, "special2 set\n");return(PROMPT);
+
+	}
 	case 'a':
 		switch(flags[1]) {
 		case 'd': obj_ptr->adjustment = (char) num; output(fd, "Adjustment set.\n"); return(PROMPT);
@@ -703,7 +734,7 @@ int dm_set_obj( creature *ply_ptr, cmd *cmnd )
 		}
 		break;
 	case 'f':
-		if(num < 1 || num > 128) return(PROMPT);
+		if(num < 1 || num > 256) return(PROMPT);
 		if(flags[1] == 's') {
 		   if(!FS_ISSET(obj_ptr, num-1)) {
 			FS_SET(obj_ptr, num-1);	
@@ -810,6 +841,17 @@ int dm_set_obj( creature *ply_ptr, cmd *cmnd )
 		obj_ptr->value = num;
 		output(fd, "Value set.\n");
 		return(PROMPT);
+	case 'x':
+		num = atoi(&cmnd->str[3][1]);
+		if(num < 0 || num > 13) {
+			return(0);
+		}
+		obj_ptr->sets_flag[num] = cmnd->val[3];
+
+		sprintf(g_buffer, "%d shots in res/dam %d added.\n",  
+		      (int)cmnd->val[3], num);
+		output(fd, g_buffer);
+		return(PROMPT); 	
 	case 'w':
 		switch(flags[1]) {
 		case 'g': obj_ptr->weight = (short) num; output(fd, "Weight set.\n");return(PROMPT);

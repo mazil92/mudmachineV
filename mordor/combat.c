@@ -45,6 +45,7 @@
 
 int update_combat( creature *crt_ptr )
 {
+   int 		damage_type;
    creature *att_ptr;
    room     *rom_ptr;
    etag     *ep;
@@ -101,7 +102,10 @@ int update_combat( creature *crt_ptr )
 	{
 		victim_is_monster = 1;
 	}
- 
+ 	
+	/*choose a damage type now*/
+	damage_type = choose_creature_damage_type(crt_ptr);
+
 	/* I think this check is redundanct now */
 	if(att_ptr != crt_ptr) 
 	{
@@ -214,21 +218,40 @@ int update_combat( creature *crt_ptr )
 		
 			if(F_ISSET(crt_ptr, MBRETH) && mrand(1,30)<5)
 			{
-				if (F_ISSET(crt_ptr, MBRWP1) && !F_ISSET(crt_ptr, MBRWP2))
+				if (F_ISSET(crt_ptr, MBRWP1) && !F_ISSET(crt_ptr, MBRWP2)){
 					n = bw_spit_acid(crt_ptr,att_ptr);
-				else if (F_ISSET(crt_ptr, MBRWP1) && F_ISSET(crt_ptr, MBRWP2))
+					damage_type = DPOISON;
+				}
+				else if (F_ISSET(crt_ptr, MBRWP1) && F_ISSET(crt_ptr, MBRWP2)){
 					n = bw_poison(crt_ptr,att_ptr);
-				else if (!F_ISSET(crt_ptr, MBRWP1) && F_ISSET(crt_ptr, MBRWP2))
+					damage_type = DPOISON;
+				}
+				else if (!F_ISSET(crt_ptr, MBRWP1) && F_ISSET(crt_ptr, MBRWP2)){
 					n = bw_cone_frost(crt_ptr,att_ptr);
-				else
+					damage_type = DWATER;
+				}
+				else{
 					n = bw_cone_fire(crt_ptr,att_ptr);
+					damage_type = DFIRE;
+				}
 			}
 			
-			else if(F_ISSET(crt_ptr, MENEDR) && mrand(1,100)< 25) 
+			else if(F_ISSET(crt_ptr, MENEDR) && mrand(1,100)< 25){ 
 				n = power_energy_drain(crt_ptr,att_ptr);
+				damage_type = DMAGIC;
+			}
 			else {
 			    if(circled==0) {
-				n = mdice(crt_ptr);		     
+					n = mdice(crt_ptr);
+
+					if (!victim_is_monster){
+						n = (int)calc_damage((float)n, (float)compute_DR_player(att_ptr), (float)compute_resistance_player(att_ptr, damage_type), (float)armor_confidence(att_ptr));
+
+					}
+					else {
+						n = (int)calc_damage((float)n, (float)compute_DR_creature(att_ptr), (float)compute_resistance_creature(att_ptr, damage_type), (float)armor_confidence(att_ptr));
+					}
+					 		     
 			    }
 			}
     
@@ -240,6 +263,10 @@ int update_combat( creature *crt_ptr )
 			{
 				sprintf(g_buffer, "%%M hit you for %d damage.\n", n);
 				mprint(fd, g_buffer, m1arg(crt_ptr));
+				
+				damage_outputter(att_ptr, n, damage_type);
+				
+
 				add_enm_dmg(att_ptr->name, crt_ptr,n);
 			
 				// added for damage descriptions 

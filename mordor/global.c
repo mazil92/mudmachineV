@@ -8,6 +8,8 @@
  *
  * $Log: global.c,v $
  *
+20/01/2022: Objectives command
+ 09/01/2022: Skills command
  *
  * 04/12/2021: Added midas command
  *
@@ -460,7 +462,7 @@ struct {
 	{ "goodbye", 	3, 		quit,	 0,			0L,			0 },
 	{ "goodbye", 	3, 		quit,	 0,			0L,			0 },
 	{ "logout", 	3, 		quit,	 0,			0L,			0 },
-	{ "", 			4, 		say,	 0,			0L,			0},
+	{ "say", 			4, 		say,	 0,			0L,			0},
 /*	{ "\"", 		4, 		say }, */
 	{ "'", 			4, 		say,	 0,			0L,			0 },
 	{ "get", 		5, 		get,	 0,			0L,			0 },
@@ -838,8 +840,13 @@ struct {
 	{ "press", -2, 0,	 0,		0L,			0 },
 
 /*new skills from here down!!! */	
-	{ "midas", 172, midas,	 LT_MIDAS,		200L,			13},
-	{ "skills", 173, skills,  0,				0L,				0},
+	{ "midas", 		172, midas,	 		LT_MIDAS,		200L,			13},
+	{ "skills", 	173, skills,  		0,				0L,				0},
+	{ "objectives",	174, objectives,	0,				0L,				0},
+
+	{ "attune",		174, attune,		LT_ATTUNE,		600L,			1},
+	{ "distill",	175, distill,		LT_DISTILL,		60L,			1},
+	{ "envenom",	176, envenom,		LT_ENVENOM, 	60L,			1},
 	{ "@", 0, 0,	 0,		0L,			0 }
 }
 ;

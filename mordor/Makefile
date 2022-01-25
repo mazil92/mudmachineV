@@ -11,8 +11,8 @@ OBJECTS = main.o global.o command1.o command2.o command3.o command4.o \
           dm1.o dm2.o dm3.o dm4.o dm5.o dm6.o dm7.o dm8.o  readcf.o \
           player.o creature.o room.o object.o update.o post.o action.o \
           misc.o special1.o memory.o combat.o logic.o talk.o bank.o \
-	  msp.o guild.o room2.o player2.o command14.o dm9.o \
-	  smithycommand1.o
+	  	  msp.o guild.o room2.o player2.o command14.o dm9.o \
+	  	  smithycommand1.o smithycombat.o smithyutility.o
             
 
 
