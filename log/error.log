@@ -37661,3 +37661,15 @@ Wed Jan 26 09:09:15 2022: --- Game Up: 4040 --- [6.66]
 
 Wed Jan 26 09:11:21 2022: --- Shutdown: 4040 --- 
 
+Wed Jan 26 09:12:41 2022: Unable to bind socket. Error: 98 (Address already in use)
+Wed Jan 26 09:12:48 2022: Unable to bind socket. Error: 98 (Address already in use)
+Wed Jan 26 09:12:56 2022: --- Game Up: 4042 --- [6.66]
+
+Wed Jan 26 09:14:39 2022: --- Shutdown: 4042 --- 
+
+Wed Jan 26 09:16:28 2022: Error occured in Failed reading room struct.
+ in file files1.c line 593
+Wed Jan 26 09:18:43 2022: Error occured in Failed reading room struct.
+ in file files1.c line 593
+Wed Jan 26 09:19:06 2022: Error occured in Failed reading room struct.
+ in file files1.c line 593
