@@ -267,28 +267,34 @@ int write_rom(int fd, room *rom_ptr, char perm_only )
 	otag	*op;
 	char	pcontain;
 
+	//elog("writing room\n");
 	n = write(fd, rom_ptr, sizeof(room));
 	if(n < sizeof(room))
 		merror("write_rom", FATAL);
 
+	//elog("counting exits\n");
 	cnt = count_ext(rom_ptr);
 	n = write(fd, &cnt, sizeof(int));
 	if(n < sizeof(int))
 		merror("write_rom", FATAL);
 
+	//printf("reading exits\n");
 	xp = rom_ptr->first_ext;
 	while(xp) {
+		//printf("writing exit!\n");
 		n = write(fd, xp->ext, sizeof(exit_));
 		if(n < sizeof(exit_))
 			merror("write_rom", FATAL);
 		xp = xp->next_tag;
 	}
 
+	//printf("counting monsters\n");
 	cnt = count_mon(rom_ptr, perm_only);
 	n = write(fd, &cnt, sizeof(int));
 	if(n < sizeof(int))
 		merror("write_rom", FATAL);
 
+	//printf("writing monsters\n");
 	cp = rom_ptr->first_mon;
 	while(cp) {
 		if(!perm_only || (perm_only && F_ISSET(cp->crt, MPERMT)))
@@ -297,11 +303,13 @@ int write_rom(int fd, room *rom_ptr, char perm_only )
 		cp = cp->next_tag;
 	}
 
+	//printf("writing objects\n");
 	cnt = count_ite(rom_ptr, perm_only);
 	n = write(fd, &cnt, sizeof(int));
 	if(n < sizeof(int))
 		merror("write_rom", FATAL);
 
+	//printf("writing objects\n");
 	op = rom_ptr->first_obj;
     while(op) {
         if(!perm_only || (perm_only && (F_ISSET(op->obj, OPERMT)))){
@@ -315,7 +323,7 @@ int write_rom(int fd, room *rom_ptr, char perm_only )
         }
         op = op->next_tag;
 	}
-
+	//printf("writing description\n");
 	if(!rom_ptr->short_desc)
 		cnt = 0;
 	else
@@ -329,7 +337,7 @@ int write_rom(int fd, room *rom_ptr, char perm_only )
 		if(n < cnt)
 			merror("write_rom", FATAL);
 	}
-
+	//printf("writing long description\n");
 	if(!rom_ptr->long_desc)
 		cnt = 0;
 	else
@@ -343,7 +351,7 @@ int write_rom(int fd, room *rom_ptr, char perm_only )
 		if(n < cnt)
 			merror("write_rom", FATAL);
 	}
-
+	//printf("writing object description\n");
 	if(!rom_ptr->obj_desc)
 		cnt = 0;
 	else
@@ -628,6 +636,7 @@ int read_rom( int fd, room *rom_ptr )
 						rom_ptr->rom_num );
 					elog( errstr );
 					free(ext);
+					
 					break;
 				}
 				else
@@ -688,6 +697,13 @@ int read_rom( int fd, room *rom_ptr )
 						rom_ptr->rom_num );
 					elog( errstr );
 					free(crt);
+
+					//Smithy here, This function causes a never ending loop
+					//I will add a cludge workaround to prevent that
+					cnt = 0;
+					return(-1);
+					break;
+
 				}
 				else
 				{
@@ -749,6 +765,10 @@ int read_rom( int fd, room *rom_ptr )
 						rom_ptr->rom_num );
 					elog( errstr );
 					free(obj);
+
+					//similar to the above monster scenario, I'm adding a break here
+					return(-1);
+					break;
 				}
 				else
 				{

@@ -89,7 +89,7 @@ int load_rom_struct_from_file(int num, room *rom_ptr )
 
 int load_crt_from_file(int num, creature **crt_ptr )
 {
-	int fd;
+	int fd, i;
 	int	n;
 	char file[256];
 
@@ -98,6 +98,8 @@ int load_crt_from_file(int num, creature **crt_ptr )
 #else
     sprintf(file, "%s/m%02d", get_monster_path(), num/MFILESIZE);
 #endif
+	
+	//elog("loading a creature from file\n");
 	fd = open(file, O_RDONLY | O_BINARY );
 	if(fd < 0) {
 		*crt_ptr = 0;

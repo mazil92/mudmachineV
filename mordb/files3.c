@@ -1,4 +1,11 @@
 /*
+26/03/2022
+added some more functionality to accept CONDITIONS in
+talk files
+they are parsed into the key and considered later
+
+love smithy
+
  * FILES3.C:
  *
  *	File I/O Routines.
@@ -336,7 +343,7 @@ int talk_crt_act(char *str, ttag *tlk )
 {
 
 	int 	index =0, num =0,i, n;
-	char	*word[4];
+	char	*word[8];
 
 
 	if (!str){
@@ -348,11 +355,11 @@ int talk_crt_act(char *str, ttag *tlk )
 	}	
 
 	
-	for (i=0;i<4;i++)
+	for (i=0;i<8;i++)
 		word[i] = 0;
 
-	for (n=0;n<4;n++){
-
+	for (n=0;n<8;n++){
+		//elog("looping through the words");
 		i=0;
 		while(isalpha((int)str[i +index]) || isdigit((int)str[i +index]) || 
 			str[i +index] == '-')
@@ -374,7 +381,39 @@ int talk_crt_act(char *str, ttag *tlk )
 
 	}
 
-	tlk->key = word[0];
+//NEW ADDITION BY SMITHY
+//CYCLE THROUGH THE PARSED WORDS
+//ASK FOR THE WORD "IF" 
+//should that word be present, read the 3 words following
+//and add them to the tlk->key
+
+	char string[80];
+	int z =0;
+	int y =0;
+	for (z=0, y=0; z < 8; z++){
+		if (word[z]){
+			//elog(word[z]);
+			if (!strcmp(word[z],"CONDITION")){
+				y = z;
+			}
+		}	
+	}
+	if (y){
+		strcpy(string, word[0]);
+		strcat(string, " ");
+		strcat(string, word[y+1]);
+		strcat(string, " ");
+		strcat(string, word[y+2]);
+		strcat(string, " ");
+		strcat(string, word[y+3]);
+		strncat(string, "\0", 1);
+		//elog(string);
+		strcpy(tlk->key,string);
+		//elog(tlk->key);
+	}
+	else tlk->key = word[0];
+
+// END OF SMITHY ADDITION
 
 	if (num < 2){
 		tlk->action = 0;
@@ -400,6 +439,11 @@ int talk_crt_act(char *str, ttag *tlk )
 	}
 	else if(!strcmp(word[1],"GIVE")){
 		tlk->type = 4;
+		tlk->action = word[2];
+		tlk->target =  0;
+	}
+	else if(!strcmp(word[1],"OBJECTIVE")){
+		tlk->type = 5;
 		tlk->action = word[2];
 		tlk->target =  0;
 	}

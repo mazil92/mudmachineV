@@ -732,7 +732,8 @@ int dm_create_crt( creature *ply_ptr, cmd *cmnd )
                 }
               }
 	    }
-
+	    sprintf(g_buffer, "this monster's keys are %s, %s, %s", crt_ptr->key[0], crt_ptr->key[1], crt_ptr->key[2]);
+	    output(ply_ptr->fd, g_buffer);
             if(!F_ISSET(crt_ptr, MNRGLD) && crt_ptr->gold)
                 crt_ptr->gold =
                 mrand(crt_ptr->gold/10, crt_ptr->gold);

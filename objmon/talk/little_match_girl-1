@@ -1,3 +1,35 @@
+second CONDITION OBJ TRUE 2
+You'll have to search far and wide for the next one ;)
+first OBJECTIVE 2 CONDITION OBJ TRUE 1
+and here's your second!
+first CONDITION OBJ FALSE 1
+you haven't done the first objective yet :(
+objective OBJECTIVE 1
+here's your first objective!
+flag ACTION pat PLAYER CONDITION FLAG TRUE 0
+you're blessed!
+flag CONDITION FLAG FALSE 0
+you're not blessed!
+strength ACTION frown PLAYER CONDITION STRENGTH BELOW 11
+Too bad, your stat isn't high enough for me to be impressed
+dex ACTION frown PLAYER CONDITION DEX BELOW 11
+Too bad, your stat isn't high enough for me to be impressed
+con ACTION frown PLAYER CONDITION CON BELOW 11
+Too bad, your stat isn't high enough for me to be impressed
+int ACTION frown PLAYER CONDITION INT BELOW 11
+Too bad, your stat isn't high enough for me to be impressed
+piety ACTION frown PLAYER CONDITION PIETY BELOW 11
+Too bad, your stat isn't high enough for me to be impressed
+strength ACTION wave PLAYER CONDITION STRENGTH ABOVE 10
+oh, your stat is above 10, well done!
+dex ACTION wave CONDITION DEX ABOVE 10
+oh, your stat is above 10, well done!
+con ACTION wave CONDITION CON ABOVE 10
+oh, your stat is above 10, well done!
+int ACTION wave CONDITION INT ABOVE 10
+oh, your stat is above 10, well done!
+piety ACTION wave CONDITION PIETY ABOVE 10
+oh, your stat is above 10, well done!
 cold
 yes, I'm cold, but the training locations are warm!  Or do you seek adventures?
 adventures

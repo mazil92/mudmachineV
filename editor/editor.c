@@ -1,4 +1,10 @@
 /*
+29/01/2022
+made a .csv conversion tool
+love smithy
+
+
+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
  * EDITOR.C:
  *
  *      Object, creature, room and player editor routines.
@@ -29,8 +35,12 @@ int main()
 {
         int i;
 
-	umask(0);
+    umask(0);
+    clearscreen();
+ 	
+	
 	while(1) {
+		
 		clearscreen();
 		posit(8,30);  printf("Mordor Editor");
 		posit(10,30); printf("1. Edit Object");
@@ -71,10 +81,1585 @@ int main()
 
 	return(0);
 }
+int save_room(room *rom_ptr, int index){
+	char	rfile[256], filebak[256];
+	int		fd;
+
+
+	//if(!Rom[num].rom)
+	//	return(0);
+	//memset(rfile,0,strlen(rfile));
+	//memset(filebak,0,strlen(filebak));
+
+	printf("starting the save function now\n");
+	get_room_filename( index, rfile );
+	//printf("got the room filename\n");
+	sprintf(filebak, "%snew ", rfile);
+	//printf("fileback is: %s\n", filebak );
+	//printf("file is: %s\n", rfile);
+	//link(rfile, filebak);
+	//printf("linked the files\n");
+	//rename(rfile, filebak);
+	//printf("%s\n", rfile );
+	fd = open(rfile, O_RDWR | O_CREAT | O_BINARY, ACC);
+	printf("opening the file now\n");
+	if(fd < 0)
+		return(-1);
+	//printf("writing the room now\n");
+	//elog("writing the room now");
+	//printf("here we go!\n");
+	if(write_rom(fd, rom_ptr, PERMONLY) < 0) {
+		printf("failed to write the room\n");
+		close(fd);
+		//unlink(rfile);
+		//rename(filebak, rfile);
+		return(-1);
+	}
+	close(fd);
+	//unlink(filebak);
+	//printf("going back to the previous function\n");
+	return(0);
+
+}
+int save_object(object *obj_ptr, int index){
+	object    *po;
+        otag      *fo;
+        room      *rom;
+        creature  *pc;
+        char	  file[80];
+	
+	sprintf(file, "%s/o%02d", get_object_path(), index/OFILESIZE);
+	
+	/* save some pointers */
+	rom = obj_ptr->parent_rom;
+	po  = obj_ptr->parent_obj;
+	fo  = obj_ptr->first_obj;
+	pc  = obj_ptr->parent_crt;
+
+	/* now clear them for the save */
+	obj_ptr->parent_rom = 0;
+	obj_ptr->parent_obj = 0;
+	obj_ptr->first_obj = 0;
+	obj_ptr->parent_crt = 0;    
+
+
+	if ( save_obj_to_file( index, obj_ptr ) != 0 )
+	{
+		//elog_broad( "Error saving object in dm_save_obj()");
+		printf("Error: object was not saved.\n");
+		return(-1);
+	}
+	else
+	{
+		printf("Object #%d updated.\n", index);
+	}
+
+
+	/* swap this new object if its in the queue */
+	replace_obj_in_queue(index, obj_ptr );
+
+
+	/* and restore the pointers */
+	obj_ptr->parent_rom = rom;
+	obj_ptr->parent_obj = po;
+	obj_ptr->first_obj = fo;
+	obj_ptr->parent_crt = pc;    
+     
+   
+
+   return(0);  
+}
+
+int save_creature(creature *crt_ptr, int index){
+		
+	ttag      *tp,*tempt;
+    char	  file[80];
+	int	  fd, i=0,x;
+	otag	  *op, *otemp;
+	ctag	  *fol;
+	
+	F_CLR(crt_ptr, MPERMT);
+	
+    tp = crt_ptr->first_tlk;
+	while(tp) {
+		tempt = tp->next_tag;
+		if(tp->key) free(tp->key);
+		if(tp->response) free(tp->response);
+		if(tp->action) free(tp->action);
+		if(tp->target) free(tp->target);
+	        free(tp);
+		tp = tempt;
+	}
+
+    crt_ptr->first_tlk = 0;
+
+	op=crt_ptr->first_obj;
+	if(!F_ISSET(crt_ptr, MTRADE)) { 
+		while(op) {
+			x=find_obj_num(op->obj);
+			if(!x) {
+			printf("Unique object in inventory not saved.\n");
+			op=op->next_tag;
+			continue;
+			}
+			crt_ptr->carry[i]= x;
+			printf("Inventory save.\n");
+			i++;
+			if(i>9){
+			printf("Only first 10 objects in inventory saved.\n");
+			break;
+			}		
+		op=op->next_tag;
+		}
+	 
+	}
+	/* flush inventory -- dont exactly know why this is necessary... */
+	
+	op=crt_ptr->first_obj;
+	crt_ptr->first_obj=0;
+	while(op) {
+		otemp=op->next_tag;
+		free_obj(op->obj);
+		free(op);
+		op=otemp;
+	} 
+
+
+	if(crt_ptr->first_enm) {
+		printf("clearing enemy list b4 save\n");
+		crt_ptr->first_enm = NULL;
+	}
+
+	
+	/* clean up possesed before save */
+	if(F_ISSET (crt_ptr, MDMFOL)) { /* clear relevant follow lists */
+	    F_CLR(crt_ptr->following, PALIAS);
+		F_CLR(crt_ptr, MDMFOL);
+		/*Ply[crt_ptr->following->fd].extr->alias_crt = 0;*/
+		
+		fol = crt_ptr->following->first_fol;
+		if(fol->crt == crt_ptr) {
+				crt_ptr->following->first_fol = fol->next_tag;
+				free(fol);
+		}
+	}
+
+	/* Update index */
+	sprintf(crt_ptr->password, "%d", index);
+
+	sprintf(file, "%s/m%02d", get_monster_path(), index/MFILESIZE);
+	
+    
+	if ( save_crt_to_file(index, crt_ptr) != 0)
+	{
+		
+		
+		printf("Error: creature was not saved\n" );
+		return(-1);
+	}
+	else
+	{
+		printf("Creature #%d updated.\n", index);
+		
+	}
+
+
+	/* swap this new creature if its in the queue */
+	replace_crt_in_queue(index, crt_ptr );
+
+	return(0);
+
+}
+
+
 
 void convert_from_csv(){
 	clearscreen();
 	posit(3,20); printf("Converting from csv");
+	
+	int i, j, m, n, o, p, q, r, result, c=0, d=0, temp, index;
+	char array[182][380];
+	char file[80] = { };
+	char str[2000] = { };
+	char test[20] = { };
+	char tempstr[80];
+	
+	FILE *fpt;
+
+	//MONSTERS FIRST
+	posit(4,20); printf("converting monsters");
+	fpt = fopen("monsters_datatbase.csv", "r");
+	
+	for (i=0; i<120; i++){
+		memset(array[i],0,strlen(str));
+
+	}
+	object *opt;
+
+	creature *crt_ptr;
+	crt_ptr = (creature *)malloc(sizeof(creature));
+	if(!crt_ptr) {
+		printf("Cannot allocate memory for creature.\n");
+		merror("dm_add_crt", NONFATAL);
+		return;
+	}
+	zero(crt_ptr, sizeof(creature));
+	crt_ptr->first_obj = 0;
+	crt_ptr->first_fol = 0;
+	crt_ptr->first_enm = 0;
+	crt_ptr->first_tlk = 0;
+	crt_ptr->parent_rom = 0;
+	crt_ptr->following = 0;
+	for(n=0; n<20; n++)
+		crt_ptr->ready[n] = 0;
+	do{
+		memset(str,0,strlen(str));
+		result = fscanf(fpt, "%1999[^;\n]", str);
+		//printf("result of fscan is %i\n", result);
+		
+		
+		if (result == 0){
+			if (!str){
+				printf("found an empty space\n");
+				/*memset(str,0,strlen(str));*/
+			}
+		}
+		result = fscanf(fpt, "%*c");
+		/*else{*/
+			if (d > 0){
+			/*c will count the number of columns in the 
+			csv file
+			currently there are 119 */
+			
+			/*posit(16,20)*///;printf("step %i: [%s]\n", c, str );
+			if (c == 0){
+				index = atoi(str);
+				/*posit(15,20)*/; printf("converting monster %03d\n", index);
+				strcpy(crt_ptr->password, str);
+
+			}
+			
+			//printf("up to step %i\n", c );
+			
+
+			strcpy(array[c], str);
+			//printf("array[%i]: [%s]\n\n",c ,array[c]);
+			
+
+			/*if we're reading the first column, try to see if there's
+			a creature with that index number and open it up*/
+			/*if (c == 1){
+				index = atoi(str);
+				posit(15,20); printf("converting monster %03d\n", index);
+				strcpy(crt_ptr->password, str);
+
+			}*/
+			/*only populate the other values if we actually
+			opened a creature*/
+			
+			/*once we are at the end of the row, close and 
+			save the creature
+			then move the counter back to the start for the new row*/
+			if (c == 118){
+				/*posit(7,20)*/; printf("attempting to save...\n");
+				for (i=0; i<119; i++){
+					if (!array[i]){
+						strcpy(array[i], "0");
+					}
+					if (array[i] == "(null)"){
+						strcpy(array[i], "0");
+					}
+				}
+				strcpy(crt_ptr->name, array[1]);
+				
+				strcpy(crt_ptr->description, array[2]);
+				
+				strcpy(crt_ptr->talk, array[3]);
+				
+				strcpy(crt_ptr->key[0], array[5]);
+				
+				strcpy(crt_ptr->key[1], array[6]);
+				
+				strcpy(crt_ptr->key[2], array[7]);
+				
+				crt_ptr->fd = (long)atoi(array[8]);
+				crt_ptr->level = (long)atoi(array[9]);
+				
+				crt_ptr->type = (long)atoi(array[10]);
+				
+				crt_ptr->class = (long)atoi(array[11]);
+				
+				crt_ptr->race = (long)atoi(array[12]);
+				
+				crt_ptr->numwander = (long)atoi(array[13]);
+				
+				crt_ptr->alignment = (long)atoi(array[14]);
+				
+				crt_ptr->strength = (long)atoi(array[15]);
+				
+				crt_ptr->dexterity = (long)atoi(array[16]);
+				
+				crt_ptr->constitution = (long)atoi(array[17]);
+				
+				crt_ptr->intelligence = (long)atoi(array[18]);
+				
+				crt_ptr->piety = (long)atoi(array[19]);
+				
+				crt_ptr->hpmax = (long)atoi(array[20]);
+				
+				crt_ptr->hpcur = (long)atoi(array[21]);
+				
+				crt_ptr->mpmax = (long)atoi(array[22]);
+				
+				crt_ptr->mpcur = (long)atoi(array[23]);
+				
+				crt_ptr->armor = (long)atoi(array[24]);
+				
+				crt_ptr->thaco = (long)atoi(array[25]);
+				
+				crt_ptr->experience = (long)atoi(array[26]);
+				
+				crt_ptr->gold = (long)atoi(array[27]);
+				
+				crt_ptr->ndice = (long)atoi(array[28]);
+				
+				crt_ptr->sdice = (long)atoi(array[29]);
+				
+				crt_ptr->pdice = (long)atoi(array[30]);
+				
+				crt_ptr->special = (long)atoi(array[31]);
+				
+				for (i=0; i<6; i++){
+					crt_ptr->proficiency[i] = (long)atoi(array[32+i]);
+					printf("%i",i);
+				}
+				
+				for (i=0; i<256; i++){
+					F_CLR(crt_ptr, i);
+					S_CLR(crt_ptr, i);
+					Q_CLR(crt_ptr, i);
+				}
+
+				//clear the flags because dirty memory
+				for (i=0; i<128; i++){
+					
+					F_CLR(crt_ptr, i);
+					
+				}
+
+				for (i=0; i<16; i++){
+					temp = atoi(array[62+i]);
+					if (temp > 0){
+						F_SET(crt_ptr, temp-1);
+					
+						printf("setting flag %i\n", temp-1);
+					}
+					
+				}
+				F_CLR(crt_ptr, 0);
+				
+				//clear the spells because dirty memory
+				for (i=0; i<128; i++){
+					
+					S_CLR(crt_ptr, i);
+					
+				}
+				for (i=0; i<16; i++){
+					temp = atoi(array[46+i]);
+					if (temp > 0){
+						S_SET(crt_ptr, temp-1);
+					}
+					
+				}
+				
+				
+				for (i=0; i<8; i++){
+					
+					crt_ptr->realm[i] = (int)atoi(array[38+i]);
+					
+				}
+				
+				//clear the quests because dirty memory
+				for (i=0; i<128; i++){
+					
+					Q_CLR(crt_ptr, i);
+					
+				}
+				for (i=0; i<16; i++){
+					temp = atoi(array[78+i]);
+					Q_SET(crt_ptr, temp);
+					
+				}
+				crt_ptr->questnum = (long)atoi(array[94]);
+				
+				for (i=0; i<10; i++){
+					crt_ptr->carry[i] = (long)atoi(array[95+i]);
+					
+				}
+				
+				/*crt_ptr->rom_num = array[105];
+				crt_ptr->bank_balance = array[106];
+				strcpy(crt_ptr->title, array[107]);
+				for (i=0; i<5; i++){
+					crt_ptr->misc_stats[0] = array[108+i];
+					printf(".");
+				}
+				crt_ptr->clanindex = array[113];printf(".");
+				crt_ptr->clanexp = array[114];printf(".");
+				crt_ptr->guildtype = array[115];printf("n");
+				crt_ptr->guildexp = array[116];printf(".");*/
+				crt_ptr->special1 = (long)atoi(array[117]);
+				crt_ptr->special2 = (long)atoi(array[118]);
+				/*posit(5,20);*/ printf("end of values\n");
+				/*save the creature*/
+				/*sprintf(crt_ptr->password, "%d", temp);*/
+				
+				
+				sprintf(file, "%s/m%02d", get_monster_path(), index/MFILESIZE);
+				
+				if (index < 5001){
+					clearscreen();
+					posit(2,1); printf("Creature name:");
+					posit(3,1); printf("%s",crt_ptr->name);
+					posit(5,1); printf("Description:");
+					posit(6,1); printf("%s",crt_ptr->description);
+					posit(8,1); printf("%s", "Talk:");
+					posit(9,1); printf("%s",crt_ptr->talk);
+					posit(10,1); printf("Experience: %ld", crt_ptr->experience);
+					printf("[%s]", array[26]);
+					posit(10,30); printf("  Gold: %ld", crt_ptr->gold);
+					printf("[%s]", array[27]);
+					posit(11,1); printf("    # Dice: %-5d", crt_ptr->ndice);
+					printf("[%s]", array[28]);
+					posit(12,30); printf(" Sides: %-5d", crt_ptr->sdice);
+					printf("[%s]", array[29]);
+					posit(12,60); printf("  Plus: %-5d", crt_ptr->pdice);
+					printf("[%s], %i", array[30], atoi(array[30]));
+					posit(13,1); printf("     Quest: %-3d", crt_ptr->questnum);
+					posit(14,29); printf("Special: %-3d", crt_ptr->special);
+					posit(15,1); printf("   HP: %-5d/%-5d", crt_ptr->hpcur, crt_ptr->hpmax);
+					posit(16,30); printf("   MP: %-5d/%-5d", crt_ptr->mpcur, crt_ptr->mpmax);
+					posit(17,1); printf("Armor: %-3d", crt_ptr->armor);
+					posit(18,30); printf("Thac0: %-3d", crt_ptr->thaco);
+					posit(19,1); printf("  Num: %-3d", crt_ptr->numwander);
+					posit(20,1); printf("Level: %-3d", crt_ptr->level);
+					posit(20,20); printf("Class: %-3d", crt_ptr->class);
+					posit(20,40); printf("Align: %-5d", crt_ptr->alignment);
+					posit(21,1); printf("  Str: %-2d", crt_ptr->strength);
+					posit(21,20); printf("  Dex: %-2d", crt_ptr->dexterity);
+					posit(21,40); printf("  Con: %-2d", crt_ptr->constitution);
+					posit(22,1); printf("  Int: %-2d", crt_ptr->intelligence);
+					posit(22,20); printf("  Pty: %-2d", crt_ptr->piety);
+					
+					//check flags
+					posit(23,10); printf("1");
+					posit(23,20); printf("2");
+					posit(23,30); printf("3");
+					posit(23,40); printf("4");
+					posit(23,50); printf("5");
+					posit(23,60); printf("6");
+					posit(24,1); printf("1234567890123456789012345678901234567890123456789012345678901234");
+					
+					int k;
+
+					for(k=0;k<64;k++){
+						str[k] = (crt_ptr->flags[k/8] & 1<<(k%8)) ? '*':'.';
+						str[64] = 0;
+						posit(25,1); printf("%s",str);
+					}		
+					
+
+					printf("Hit Enter:\n");
+					getnum(&i,0,0);
+				
+				if (save_creature(crt_ptr, index) < 0){
+					posit(5,20); printf("error with monster %i", index);
+				}	
+				}
+				c = -1;
+				d++;
+
+			}
+			c++;
+			}
+			else {
+				c++;
+				if (c == 118){
+					c = -1;
+					d++;
+				}
+			}
+		/*}/*end of the else*/
+	}while(result != EOF);
+	fclose(fpt);
+	posit(24,40); printf("Hit Enter:");
+	getnum(&i,0,0);
+	
+//OBJECTS-------------------------------------
+	posit(4,20); printf("converting objects");
+	fpt = fopen("objects_datatbase.csv", "r");
+	
+	for (i=0; i<120; i++){
+		memset(array[i],0,strlen(str));
+
+	}
+
+	object *obj_ptr;
+	obj_ptr = (object *)malloc(sizeof(object));
+
+	if(!obj_ptr) {
+		printf("Cannot allocate memory for object.\n");
+		merror("dm_add_obj", NONFATAL);
+		return;
+	}
+	zero(obj_ptr, sizeof(object));
+	obj_ptr->first_obj = 0;
+    obj_ptr->parent_obj = 0;
+    obj_ptr->parent_rom = 0;
+    obj_ptr->parent_crt = 0;
+	
+    c =0;
+
+	do{
+		memset(str,0,strlen(str));
+		
+		result = fscanf(fpt, "%1999[^;\n]", str);
+		//printf("result of fscan is %i\n", result);
+		if (result == 0){
+			if (!str){
+				printf("found an empty space\n");
+				/*memset(str,0,strlen(str));*/
+			}
+		}
+		result = fscanf(fpt, "%*c");
+
+		/*else{*/
+			if (d > 0){
+			/*c will count the number of columns in the 
+			csv file
+			currently there are 60 */
+			
+			/*posit(16,20)*///;printf("step %i: [%s]\n", c, str );
+			if (c == 0){
+				index = atoi(str);
+				/*posit(15,20)*///; printf("converting object %03d\n", index);
+				//strcpy(crt_ptr->password, str);
+
+			}
+			
+			/*posit(2,20);printf("up to step %i\n", c );*/
+			
+			strcpy(array[c], str);
+			//printf("array[%i]: [%s]\n\n",c ,array[c]);
+
+			/*if we're reading the first column, try to see if there's
+			a creature with that index number and open it up*/
+			/*if (c == 1){
+				index = atoi(str);
+				posit(15,20); printf("converting monster %03d\n", index);
+				strcpy(crt_ptr->password, str);
+
+			}*/
+			/*only populate the other values if we actually
+			opened a creature*/
+			
+			/*once we are at the end of the row, close and 
+			save the creature
+			then move the counter back to the start for the new row*/
+			if (c == 60){
+				/*posit(7,20)*/; printf("attempting to save...\n");
+				for (i=0; i<61; i++){
+					if (!array[i]){
+						strcpy(array[i], "0");
+					}
+					if (array[i] == "(null)"){
+						strcpy(array[i], "0");
+					}
+				}
+				strcpy(obj_ptr->name, array[1]);
+				
+				strcpy(obj_ptr->description, array[2]);
+				
+				strcpy(obj_ptr->key[0], array[3]);
+				
+				strcpy(obj_ptr->key[1], array[4]);
+				
+				strcpy(obj_ptr->key[2], array[5]);
+
+				strcpy(obj_ptr->use_output, array[6]);
+				
+				obj_ptr->value = (long)atoi(array[7]);
+				obj_ptr->weight = (long)atoi(array[8]);
+				
+				obj_ptr->type = (long)atoi(array[9]);
+				
+				obj_ptr->adjustment = (long)atoi(array[10]);
+				
+				obj_ptr->shotsmax = (long)atoi(array[11]);
+				
+				obj_ptr->shotscur = (long)atoi(array[12]);
+				
+				obj_ptr->ndice = (long)atoi(array[13]);
+				
+				obj_ptr->sdice = (long)atoi(array[14]);
+				
+				obj_ptr->pdice = (long)atoi(array[15]);
+
+				obj_ptr->armor = (long)atoi(array[16]);
+
+				obj_ptr->wearflag = (long)atoi(array[17]);
+				
+				obj_ptr->magicpower= (long)atoi(array[18]);
+				
+				obj_ptr->magicrealm = (long)atoi(array[19]);
+				
+				obj_ptr->special = (long)atoi(array[20]);
+
+				for (i=0; i<256; i++){
+					F_CLR(obj_ptr, i);
+				}
+				for (i=0; i<16; i++){
+					temp = atoi(array[21+i]);
+					if (temp > 0){
+						F_SET(obj_ptr, temp-1);
+					}	
+				}
+				obj_ptr->questnum = (long)atoi(array[37]);
+
+				obj_ptr->strength = (long)atoi(array[38]);
+				
+				obj_ptr->dexterity = (long)atoi(array[39]);
+				
+				obj_ptr->constitution = (long)atoi(array[40]);
+				
+				obj_ptr->intelligence = (long)atoi(array[41]);
+				
+				obj_ptr->piety = (long)atoi(array[42]);
+				
+				for (i=0; i<16; i++){
+					
+					obj_ptr->sets_flag[i] = (int)atoi(array[43+i]);
+				}
+				
+				obj_ptr->special1 = (long)atoi(array[59]);
+				obj_ptr->special2 = (long)atoi(array[60]);
+				
+				/*posit(5,20);*/ printf("end of values\n");
+				/*save the creature*/
+				/*sprintf(obj_ptr->password, "%d", temp);*/
+				
+				
+				sprintf(file, "%s/o%02d", get_object_path(), index/MFILESIZE);
+				
+				if (index < 5001){
+					clearscreen();
+					posit(2,1); printf("Objectname:");
+					posit(3,1); printf("%s",obj_ptr->name);
+					posit(5,1); printf("Description:");
+					posit(6,1); printf("%s",obj_ptr->description);
+					
+					posit(11,1); printf("    # Dice: %-5d", obj_ptr->ndice);
+					printf("[%s]", array[28]);
+					posit(12,30); printf(" Sides: %-5d", obj_ptr->sdice);
+					printf("[%s]", array[29]);
+					posit(12,60); printf("  Plus: %-5d", obj_ptr->pdice);
+					printf("[%s], %i", array[30], atoi(array[30]));
+					posit(13,1); printf("     Quest: %-3d", obj_ptr->questnum);
+					posit(14,29); printf("Special: %-3d", obj_ptr->special);
+					posit(17,1); printf("Armor: %-3d", obj_ptr->armor);
+					posit(21,1); printf("  Str: %-2d", obj_ptr->strength);
+					posit(21,20); printf("  Dex: %-2d", obj_ptr->dexterity);
+					posit(21,40); printf("  Con: %-2d", obj_ptr->constitution);
+					posit(22,1); printf("  Int: %-2d", obj_ptr->intelligence);
+					posit(22,20); printf("  Pty: %-2d", obj_ptr->piety);
+					
+					//posit(25,40); printf("Hit Enter:");
+					//getnum(&i,0,0);
+				
+				if (save_object(obj_ptr, index) < 0){
+					posit(5,20); printf("error with object %i", index);
+				}	
+				}
+				c = -1;
+				d++;
+
+			}
+			c++;
+			}
+			else {
+				c++;
+				if (c == 60){
+					c = 0;
+					d++;
+				}
+			}
+		/*}/*end of the else*/
+	}while(result != EOF);
+	fclose(fpt);
+	posit(24,40); printf("Hit Enter:");
+	getnum(&i,0,0);
+	
+//ROOMS-------------------------------------
+	posit(4,20); printf("converting rooms\n");
+	fpt = fopen("rooms_datatbase.csv", "r");
+	
+	for (i=0; i<129; i++){
+		memset(array[i],0,strlen(str));
+
+	}
+	
+	room *rom_ptr, *new_rom;
+	printf("mallon rom_ptr\n");
+	rom_ptr = (room *)malloc(sizeof(room));
+	lasttime *perm;
+	printf("malloc perm\n");
+	perm = (struct lasttime *)malloc(sizeof(lasttime));
+	exit_ *exit0;
+	printf("malloc exit0\n");
+	exit0 = (exit_ *)malloc(sizeof(exit_));
+	exit_ *exit1;
+	printf("malloc exit1\n");
+	exit1 = (exit_ *)malloc(sizeof(exit_));
+	exit_ *exit2;
+	printf("malloc exit2\n");
+	exit2 = (exit_ *)malloc(sizeof(exit_));
+	exit_ *exit3;
+	printf("malloc exit3\n");
+	exit3 = (exit_ *)malloc(sizeof(exit_));
+	exit_ *exit4;
+	printf("malloc exit4\n");
+	exit4 = (exit_ *)malloc(sizeof(exit_));
+	exit_ *exit5;
+	printf("malloc exit5\n");
+	exit5 = (exit_ *)malloc(sizeof(exit_));
+	exit_ *exit6;
+	printf("malloc exit6\n");
+	exit6 = (exit_ *)malloc(sizeof(exit_));
+	exit_ *exit7;
+	printf("malloc exit7\n");
+	exit7 = (exit_ *)malloc(sizeof(exit_));
+
+	//exit_ *exit7;
+	//exit7 = (exit_ *)malloc(sizeof(exit_));
+
+	exit_ *exit8;
+	exit8 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit9;
+	exit9 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit10;
+	exit10 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit11;
+	exit11 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit12;
+	exit12 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit13;
+	exit13 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit14;
+	exit14 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit15;
+	exit15 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit16;
+	exit16 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit17;
+	exit17 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit18;
+	exit18 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit19;
+	exit19 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit20;
+	exit20 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit21;
+	exit21 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit22;
+	exit22 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit23;
+	exit23 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit24;
+	exit24 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit25;
+	exit25 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit26;
+	exit26 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit27;
+	exit27 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit28;
+	exit28 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit29;
+	exit29 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit30;
+	exit30 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit31;
+	exit31 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit32;
+	exit32 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit33;
+	exit33 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit34;
+	exit34 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit35;
+	exit35 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit36;
+	exit36 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit37;
+	exit37 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit38;
+	exit38 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit39;
+	exit39 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit40;
+	exit40 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit41;
+	exit41 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit42;
+	exit42 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit43;
+	exit43 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit44;
+	exit44 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit45;
+	exit45 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit46;
+	exit46 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit47;
+	exit47 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit48;
+	exit48 = (exit_ *)malloc(sizeof(exit_));
+	
+	exit_ *exit49;
+	exit49 = (exit_ *)malloc(sizeof(exit_));
+	
+	struct ext_tag *xtagA;
+	printf("malloc xtagA\n");
+	xtagA = (struct ext_tag*)malloc(2000);
+	struct ext_tag *xtagB;
+	printf("malloc xtagB\n");
+	xtagB = (struct ext_tag*)malloc(2000);
+	struct ext_tag *xtagC;
+	printf("malloc xtagC\n");
+	xtagC = (struct ext_tag*)malloc(2000);
+	struct ext_tag *xtagD;
+	printf("malloc xtagD\n");
+	xtagD = (struct ext_tag*)malloc(2000);
+	struct ext_tag *xtagE;
+	printf("malloc xtagE\n");
+	xtagE = (struct ext_tag*)malloc(2000);
+	struct ext_tag *xtagF;
+	printf("malloc xtagF\n");
+	xtagF = (struct ext_tag*)malloc(2000);
+	struct ext_tag *xtagG;
+	printf("malloc xtagG\n");
+	xtagG = (struct ext_tag*)malloc(2000);
+	struct ext_tag *xtagH;
+	printf("malloc xtagH\n");
+	xtagH = (struct ext_tag*)malloc(2000);
+	
+	struct ext_tag *xtagI;
+	xtagI = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagJ;
+	xtagJ = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagK;
+	xtagK = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagL;
+	xtagL = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagM;
+	xtagM = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagN;
+	xtagN = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagO;
+	xtagO = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagP;
+	xtagP = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagQ;
+	xtagQ = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagR;
+	xtagR = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagS;
+	xtagS = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagT;
+	xtagT = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagU;
+	xtagU = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagV;
+	xtagV = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagW;
+	xtagW = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagX;
+	xtagX = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagY;
+	xtagY = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagZ;
+	xtagZ = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAA;
+	xtagAA = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAB;
+	xtagAB = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAC;
+	xtagAC = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAD;
+	xtagAD = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAE;
+	xtagAE = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAF;
+	xtagAF = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAG;
+	xtagAG = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAH;
+	xtagAH = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAI;
+	xtagAI = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAJ;
+	xtagAJ = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAK;
+	xtagAK = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAL;
+	xtagAL = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAM;
+	xtagAM = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAN;
+	xtagAN = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAO;
+	xtagAO = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAP;
+	xtagAP = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAQ;
+	xtagAQ = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAR;
+	xtagAR = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAS;
+	xtagAS = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAT;
+	xtagAT = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAU;
+	xtagAU = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAV;
+	xtagAV = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAW;
+	xtagAW = (struct ext_tag*)malloc(2000);
+		
+	struct ext_tag *xtagAX;
+	xtagAX = (struct ext_tag*)malloc(2000);
+			
+	char *buf, *desc;
+	printf("malloc str1\n");
+	char *str1; str1 = (char *)malloc(2000);
+	printf("malloc str2\n");
+	char *str2; str2 = (char *)malloc(2000);
+	int len, exists;
+	printf("mallocs done\n");
+
+	char exitarray[131][80];
+
+	if(!rom_ptr) {
+		printf("Cannot allocate memory for room.\n");
+		merror("dm_add_rom", NONFATAL);
+		return;
+	}
+	zero(rom_ptr, sizeof(room));
+		
+    c =0;
+    d =0;
+    memset(str1,0,strlen(str1));
+    memset(str2,0,strlen(str2));
+
+	do{
+		memset(str,0,strlen(str));
+		
+		
+		result = fscanf(fpt, "%1999[^;\n]", str);
+		//printf("result of fscan is %i\n", result);
+		if (result == 0){
+			if (!str){
+				printf("found an empty space\n");
+				/*memset(str,0,strlen(str));*/
+			}
+		}
+		result = fscanf(fpt, "%*c");
+		//printf("step %i: [%s]\n", c, str );
+
+		/*else{*/
+		if (d > 0){
+			/*c will count the number of columns in the 
+			csv file
+			currently there are 182 (+ index) */
+				
+			/*posit(16,20)*/;
+			if (c == 0){
+				index = atoi(str);
+				/*posit(15,20)*/; printf("converting room %03d\n", index);
+				//strcpy(crt_ptr->password, str);
+
+			}
+			//printf("up to step %i\n", c );
+			strcpy(array[c], str);
+			//printf("array[%i]: [%s]\n\n",c ,array[c]);
+			if (c==2){
+				strcpy(str1, str);
+				printf("[%s]\n",str1);
+			}
+			if (c==3){
+				strcpy(str2, str);
+				printf("[%s]\n",str2);
+			}
+			/*if we're reading the first column, try to see if there's
+			a creature with that index number and open it up*/
+			/*if (c == 1){
+				index = atoi(str);
+				posit(15,20); printf("converting monster %03d\n", index);
+				strcpy(crt_ptr->password, str);
+
+			}*/
+			/*only populate the other values if we actually
+			opened a creature*/
+			
+			/*once we are at the end of the row, close and 
+			save the creature
+			then move the counter back to the start for the new row*/
+			if (c == 128){
+			/*posit(7,20)*/; printf("attempting to save...\n");
+			for (i=0; i<183; i++){
+				if (!array[i]){
+					strcpy(array[i], "0");
+				}
+				if (array[i] == "(null)"){
+					strcpy(array[i], "0");
+				}
+			}
+
+			get_room_filename(index, file);
+			printf("getting room filename\n");
+			if (!file)
+				printf("no file \n");
+			printf("%s\n", file );
+			if (file)
+				printf("file path exists\n");
+			if (!file_exists(file)){
+				printf("%s\n",array[0]);
+				new_rom = (room *)malloc(sizeof(room));
+				if(!new_rom)
+					merror("dm_add_room", FATAL);
+
+				zero(new_rom, sizeof(room));
+				printf("making new room\n");
+				new_rom->rom_num = (short) index;
+				sprintf(new_rom->name, "Room #%d", index);
+
+				F_SET(new_rom, RNOTEL); /* set room to no tport MJK */
+				new_rom->death_rom = 0;
+
+				if ( save_rom_to_file(index, new_rom) != 0 ) {
+					printf("Error: Unable to save room to file.\n");
+						
+				}
+	
+				free(new_rom);
+			}
+			//printf("hi\n");
+			rom_ptr->rom_num = (long)atoi(array[0]);
+			//printf("rom num: %s\n", array[0]); 
+			strcpy(rom_ptr->name, array[1]);
+			//printf("rom name: %s\n", array[1]); 
+			
+			len = strlen(str1)+1;
+			buf = (char *)malloc(len);
+			memcpy(buf, str1, len);
+			rom_ptr->short_desc = buf;
+			//strcpy(rom_ptr->short_desc, str1);
+			//printf("short desc: %s\n", str1);
+			//printf("short desc: %s\n", buf);
+			//printf("short desc: %s\n", rom_ptr->short_desc);
+			int len2;
+			len2 = strlen(str2)+1;
+			buf = (char *)malloc(len2);
+			memcpy(buf, str2, len2);
+			rom_ptr->long_desc = buf;
+			//strcpy(rom_ptr->long_desc, str2);
+			//printf("long desc: %s\n", str2);
+			//printf("long desc: %s\n", buf);
+			//printf("long desc: %s\n", rom_ptr->long_desc);
+
+			//free(len2);
+
+			rom_ptr->lolevel = (long)atoi(array[4]);
+			//printf("lolevel: %s\n", array[4]); 
+			rom_ptr->hilevel = (long)atoi(array[5]);
+			//printf("hilevel: %s\n", array[5]); 
+			rom_ptr->special = (long)atoi(array[6]);
+			//printf("special: %s\n", array[6]); 
+			rom_ptr->trap = (long)atoi(array[7]);
+			//printf("trap: %s\n", array[7]); 
+			rom_ptr->trapexit = (long)atoi(array[8]);
+			//printf("trapexit: %s\n", array[8]); 
+			strcpy(rom_ptr->track, array[9]);
+			//printf("track: %s\n", array[9]);
+			
+			//loop through all the flags first and clear them
+			// you don't know where the memory has been its dirty!
+			for (i=0; i<128; i++){
+				F_CLR(rom_ptr, i);
+			}
+			for (i=0; i<16; i++){
+				if ((long)atoi(array[10+i]) != 0){
+					F_SET(rom_ptr, (long)atoi(array[10+i])-1);
+					//printf("flag: %s\n", array[10+i]);
+				}
+			}
+
+			for (i=0; i<10; i++){
+				rom_ptr->random[i] = (long)atoi(array[26+i]);
+				//printf("random: %s\n", array[25+i]);
+			}
+ 
+			int tmep = atoi(array[37]);
+
+			rom_ptr->traffic = tmep;
+			printf("traffic: %s\n", array[37]);
+			printf("tmep: %i\n", tmep);
+			printf("tmep: %c\n", tmep);
+			printf("tmep: %-3d\n", tmep);
+			printf("traffic: %i\n", rom_ptr->traffic);
+			printf("traffic: %c\n", rom_ptr->traffic);
+			printf("traffic: %-3d\n", rom_ptr->traffic);
+			for (i=0; i<10; i++){
+				zero(perm, sizeof(lasttime));
+
+				if (array[37+2*i] >0){
+					rom_ptr->perm_mon[i].misc = (long)atoi(array[37+2*i]);
+					rom_ptr->perm_mon[i].ltime = (time_t)(long)atoi(array[38+2*i]);
+					rom_ptr->perm_mon[i].interval = (time_t)(long)atoi(array[38+2*i]);
+					//printf("perm: %s\n", array[37+2*i]);
+					//printf("permtime: %s\n", array[38+2*i]);
+				}
+
+				if (array[57+2*i] >0){
+					rom_ptr->perm_obj[i].misc = (long)atoi(array[57+2*i]);
+					rom_ptr->perm_obj[i].ltime = (time_t)(long)atoi(array[58+2*i]);
+					rom_ptr->perm_obj[i].interval = (time_t)(long)atoi(array[58+2*i]);
+				}
+					
+					
+			}
+
+			rom_ptr->beenhere = (long)atoi(array[77]); 
+			//printf("beenhere: %s\n", array[77]);
+			//printf("clearing xtagA\n");
+			//if (xtagA) zero(xtagA, sizeof(xtagA));
+			//printf("clearing xtagB\n");
+			//if (xtagB) zero(xtagB, sizeof(xtagB));
+			//printf("begining exit stuff\n");
+			zero(exit0, sizeof(struct exit_));
+			zero(exit1, sizeof(struct exit_));
+			zero(exit2, sizeof(struct exit_));
+			zero(exit3, sizeof(struct exit_));
+			zero(exit4, sizeof(struct exit_));
+			zero(exit5, sizeof(struct exit_));
+			zero(exit6, sizeof(struct exit_));
+			zero(exit7, sizeof(struct exit_));
+			zero(exit8, sizeof(struct exit_));
+			zero(exit9, sizeof(struct exit_));
+			zero(exit10, sizeof(struct exit_));
+			zero(exit11, sizeof(struct exit_));
+			zero(exit12, sizeof(struct exit_));
+			zero(exit13, sizeof(struct exit_));
+			zero(exit14, sizeof(struct exit_));
+			zero(exit15, sizeof(struct exit_));
+			zero(exit16, sizeof(struct exit_));
+			zero(exit17, sizeof(struct exit_));
+			zero(exit18, sizeof(struct exit_));
+			zero(exit19, sizeof(struct exit_));
+			zero(exit20, sizeof(struct exit_));
+			zero(exit21, sizeof(struct exit_));
+			zero(exit22, sizeof(struct exit_));
+			zero(exit23, sizeof(struct exit_));
+			zero(exit24, sizeof(struct exit_));
+			zero(exit25, sizeof(struct exit_));
+			zero(exit26, sizeof(struct exit_));
+			zero(exit27, sizeof(struct exit_));
+			zero(exit28, sizeof(struct exit_));
+			zero(exit29, sizeof(struct exit_));
+			zero(exit30, sizeof(struct exit_));
+			zero(exit31, sizeof(struct exit_));
+			zero(exit32, sizeof(struct exit_));
+			zero(exit33, sizeof(struct exit_));
+			zero(exit34, sizeof(struct exit_));
+			zero(exit35, sizeof(struct exit_));
+			zero(exit36, sizeof(struct exit_));
+			zero(exit37, sizeof(struct exit_));
+			zero(exit38, sizeof(struct exit_));
+			zero(exit39, sizeof(struct exit_));
+			zero(exit40, sizeof(struct exit_));
+			zero(exit41, sizeof(struct exit_));
+			zero(exit42, sizeof(struct exit_));
+			zero(exit43, sizeof(struct exit_));
+			zero(exit44, sizeof(struct exit_));
+			zero(exit45, sizeof(struct exit_));
+			zero(exit46, sizeof(struct exit_));
+			zero(exit47, sizeof(struct exit_));
+			zero(exit48, sizeof(struct exit_));
+			zero(exit49, sizeof(struct exit_));
+			for (i=49; i>-1; i--){
+				//printf("length of exit name is %i\n", strlen(array[78+13*i]));
+				//printf("%s\n", array[78+13*i]);
+				//if (exit) zero(exit, sizeof(struct exit_));
+				//exit = 0;
+				//free(exit);
+				//if (!exit) printf("cleared the exit variable\n");
+				//printf("%s\n", exit->name);
+				exists = 0;
+				if (array[78+i] != 0 && strlen(array[78+i]) >= 2) {
+					
+					exists = 1;
+					//printf("%s\n", array[78+13*i]);
+					//printf("doing the name now\n");
+					
+					//exit_ *exit;
+					//exit = (exit_ *)malloc(sizeof(exit_));
+					//zero(exit, sizeof(struct exit_));
+					
+					// LOOP through the entry of the big room array
+					// that corresponds to the exit you are currently
+					// considering and load all of the indivdual values
+					// into the "exit array" for futher consideration
+					//printf("exit from array: %s\n", array[78+i]);
+					char *token;
+					char *rest;
+					//get the first token
+					
+					int z = 0;
+					//char delim[2] = '0';
+					//delim[1] = ',';
+					token = strtok_r(array[78+i], ",", &rest);
+						//get some more tokens
+					while (token != NULL && z<127){
+						strcpy(exitarray[z], token);
+						//printf("exitarray %i: %s [%s]\n", z, exitarray[z], token);
+						z++;
+						token = strtok_r(rest, ",", &rest);
+					}
+
+					/*int z;
+					for (z=0; z<131; z++){
+						memset(str,0,strlen(str));
+	
+						result = scanf(array[78+i], " %[^,\n],", str);
+						printf("result of fscan is %i\n", result);
+						if (result == 0){
+							if (!str){
+								printf("found an empty space\n");
+								//memset(str,0,strlen(str));
+							}
+						}
+						result = scanf(array[78+i], "%*c");
+						strcpy(exitarray[z], str);
+						printf("exitarray %i: %s [%s]\n", z, exitarray[z], str);
+					}*/
+						//CONSIDER THE exit number you are up to by checking the
+					//value of i. Then, read your exit array values
+					// and load them into the appropriate exit
+					if (i == 8) {
+						strcpy(exit8->name, exitarray[0]);
+						exit8->room = (long)atoi(exitarray[1]);
+						exit8->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit8, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					if (i == 7) {
+						strcpy(exit7->name, exitarray[0]);
+						exit7->room = (long)atoi(exitarray[1]);
+						exit7->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit7, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					if (i == 6) {
+						strcpy(exit6->name, exitarray[0]);
+						exit6->room = (long)atoi(exitarray[1]);
+						exit6->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit6, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					if (i == 5) {
+						strcpy(exit5->name, exitarray[0]);
+						exit5->room = (long)atoi(exitarray[1]);
+						exit5->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit5, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					if (i == 4) {
+						strcpy(exit4->name, exitarray[0]);
+						exit4->room = (long)atoi(exitarray[1]);
+						exit4->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit4, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					if (i == 3) {
+						strcpy(exit3->name, exitarray[0]);
+						exit3->room = (long)atoi(exitarray[1]);
+						exit3->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit3, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					if (i == 2) {
+						strcpy(exit2->name, exitarray[0]);
+						exit2->room = (long)atoi(exitarray[1]);
+						exit2->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit2, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+
+					}
+					if (i == 1) {
+						strcpy(exit1->name, exitarray[0]);
+						exit1->room = (long)atoi(exitarray[1]);
+						exit1->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit1, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					if (i == 0) {
+						strcpy(exit0->name, exitarray[0]);
+						exit0->room = (long)atoi(exitarray[1]);
+						exit0->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit0, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+					}
+					//printf("%s\n", exit->name);
+					
+					//printf("%s\n", array[79+13*i]);
+					//printf("doing the key now\n");
+					//printf("need to set a key flag from array[%i]: %s \n", 80+13*i, array[80+13*i]);
+						
+
+					//strcpy(exit->key, (long)atoi(array[80+13*i]));
+						//printf("%s\n", array[80+13*i]);
+					
+					
+					//printf("setting the exit tag now\n");
+					//xtagA->ext = exit;
+					//xtagA->next_tag = 0;
+						
+				}
+					
+				if (i == 7){
+					xtagA->next_tag = 0;
+					if (exit7 && strlen(exit7->name) > 1) xtagA->ext = exit7;
+					else xtagA->ext = 0;
+				}
+				if (i == 6){
+					if (!xtagA->ext) xtagB->next_tag =0;
+					else xtagB->next_tag = xtagA;
+					if (exit6 && strlen(exit6->name) > 1) xtagB->ext = exit6;
+					else xtagB->ext = 0;
+				}
+				if (i == 5){
+					if (!xtagB->ext) xtagC->next_tag =0;
+					else xtagC->next_tag = xtagB;
+					if (exit5 && strlen(exit5->name) > 1) xtagC->ext = exit5;
+					else xtagC->ext = 0;
+				}
+				if (i == 4){
+					if (!xtagC->ext) xtagD->next_tag =0;
+					else xtagD->next_tag = xtagC;
+					if (exit4 && strlen(exit4->name) > 1) xtagD->ext = exit4;
+					else xtagD->ext = 0;
+				}
+				if (i == 3){
+					if (!xtagD->ext) xtagE->next_tag =0;
+					else xtagE->next_tag = xtagD;
+					if (exit3 && strlen(exit3->name) > 1) xtagE->ext = exit3;
+					else xtagE->ext = 0;
+				}
+				if (i == 2){
+					if (!xtagE->ext) xtagF->next_tag =0;
+					else xtagF->next_tag = xtagE;
+					if (exit2 && strlen(exit2->name) > 1) xtagF->ext = exit2;
+					else xtagF->ext = 0;
+				}
+				if (i == 1){
+					if (!xtagF->ext) xtagG->next_tag =0;
+					else xtagG->next_tag = xtagF;
+					if (exit1 && strlen(exit1->name) > 1) xtagG->ext = exit1;
+					else xtagG->ext = 0;
+				}
+				if (i == 0){
+					if (!xtagG->ext) xtagH->next_tag =0;
+					else xtagH->next_tag = xtagG;
+					if (exit0 && strlen(exit0->name) > 1) xtagH->ext = exit0;
+					else xtagH->ext = 0;
+				}					
+			}
+				//printf("setting the first_ext tag\n");
+				//xtagB = realloc(xtagB, sizeof(xtagA)+sizeof(rom_ptr->first_ext));
+				//xtagB->next_tag = rom_ptr->first_ext;
+				//xtagB->ext = xtagA->ext;		
+			rom_ptr->first_ext = xtagH;
+			//printf("death_rom: %s\n", array[182]);
+			rom_ptr->death_rom = (long)atoi(array[128]);
+
+
+				
+			/*posit(5,20);*/ printf("end of values\n");
+			/*save the creature*/
+			/*sprintf(rom_ptr->password, "%d", temp);*/
+			
+				
+			sprintf(file, "%s/o%02d", get_room_path(), index/MFILESIZE);
+				
+			if (index < 15001){
+				//clearscreen();
+				printf("roomname:");
+				printf("%s\n",rom_ptr->name);
+				printf("Description:");
+				printf("%s %s\n",rom_ptr->short_desc, rom_ptr->long_desc);
+				printf("traffic: %i\n", rom_ptr->traffic);
+
+					
+					//posit(25,40); printf("Hit Enter:");
+					//getnum(&i,0,0);
+				
+				if (save_room(rom_ptr, index) < 0){
+					printf("error with room %i\n", index);
+				}	
+			}
+			c = -1;
+			d++;
+			memset(str1,0,strlen(str1));
+			memset(str2,0,strlen(str2));
+
+			}
+			c++;
+		}
+		//end of if d > 0
+		else {
+			//printf("d is 0\n");
+			c++;
+			if (c == 129){
+				c = 0;
+				d++;
+				memset(str1,0,strlen(str1));
+				memset(str2,0,strlen(str2));
+			}
+		}
+		/*}/*end of the else*/
+	}while(result != EOF);
+
+	fclose(fpt);
+	posit(24,40); printf("Hit Enter:");
+	getnum(&i,0,0);
+	clearscreen();
+	
 	return;
 }
 
@@ -82,7 +1667,7 @@ void convert_to_csv(){
 	clearscreen();
 	posit(3,20); printf("Converting to csv");
 
-	int i, j, m, n, o, p, q, r;
+	int i, j, m, n, o, p, q, r, c;
 	int flags0 = 0, flags1 = 0, flags2 = 0, flags3 = 0, flags4 = 0, flags5 = 0, flags6 = 0, flags7 = 0, flags8 = 0, flags9 = 0, flags10 = 0, flags11 = 0, flags12 = 0, flags13 = 0, flags14 = 0, flags15 = 0;
 	int spells0 = 0, spells1 = 0, spells2 = 0, spells3 = 0, spells4 = 0, spells5 = 0, spells6 = 0, spells7 = 0, spells8 = 0, spells9 = 0, spells10 = 0, spells11 = 0, spells12 = 0, spells13 = 0, spells14 = 0, spells15 = 0;
 	int quests0 = 0, quests1 = 0, quests2 = 0, quests3 = 0, quests4 = 0, quests5 = 0, quests6 = 0, quests7 = 0, quests8 = 0, quests9 = 0, quests10 = 0, quests11 = 0, quests12 = 0, quests13 = 0, quests14 = 0, quests15 = 0;
@@ -97,12 +1682,12 @@ void convert_to_csv(){
 	for (i=0, j=0; i<5000; i++){
 		
 		if (load_crt(i, &crt_ptr) > -1) {
-		load_crt_from_file(i, &crt_ptr);
+			load_crt_from_file(i, &crt_ptr);
 
-		posit(5,20); printf("converting monster %i\n", i);
+			posit(5,20); printf("converting monster %i\n", i);
 
-		/*flag check, be sure to incement 'm' when you add more flags!*/
-		for (m=0, n=0; m<128; m++){
+			/*flag check, be sure to incement 'm' when you add more flags!*/
+			for (m=0, n=0; m<128; m++){
 			switch (n){
 					case 0: flags0 = 0;
 					case 1: flags1 = 0;
@@ -123,29 +1708,29 @@ void convert_to_csv(){
 				}
 			if (F_ISSET(crt_ptr, m)){
 				switch (n){
-					case 0: flags0 = m;
-					case 1: flags1 = m;
-					case 2: flags2 = m;
-					case 3: flags3 = m;
-					case 4: flags4 = m;
-					case 5: flags5 = m;
-					case 6: flags6 = m;
-					case 7: flags7 = m;
-					case 8: flags8 = m;
-					case 9: flags9 = m;
-					case 10: flags10 = m;
-					case 11: flags11 = m;
-					case 12: flags12 = m;
-					case 13: flags13 = m;
-					case 14: flags14 = m;
-					case 15: flags15 = m;
+					case 0: flags0 = m+1;
+					case 1: flags1 = m+1;
+					case 2: flags2 = m+1;
+					case 3: flags3 = m+1;
+					case 4: flags4 = m+1;
+					case 5: flags5 = m+1;
+					case 6: flags6 = m+1;
+					case 7: flags7 = m+1;
+					case 8: flags8 = m+1;
+					case 9: flags9 = m+1;
+					case 10: flags10 = m+1;
+					case 11: flags11 = m+1;
+					case 12: flags12 = m+1;
+					case 13: flags13 = m+1;
+					case 14: flags14 = m+1;
+					case 15: flags15 = m+1;
 				}
 				n++;
 
 			}
-		}
-		/*spell check, be sure to incement 'm' when you add more flags!*/
-		for (o=0, p=0; o<128; o++){
+			}
+			/*spell check, be sure to incement 'm' when you add more flags!*/
+			for (o=0, p=0; o<128; o++){
 			switch (p){
 					case 0: spells0 = 0;
 					case 1: spells1 = 0;
@@ -166,78 +1751,79 @@ void convert_to_csv(){
 				}
 			if (S_ISSET(crt_ptr, o)){
 				switch (p){
-					case 0: spells0 = o;
-					case 1: spells1 = o;
-					case 2: spells2 = o;
-					case 3: spells3 = o;
-					case 4: spells4 = o;
-					case 5: spells5 = o;
-					case 6: spells6 = o;
-					case 7: spells7 = o;
-					case 8: spells8 = o;
-					case 9: spells9 = o;
-					case 10: spells10 = o;
-					case 11: spells11 = o;
-					case 12: spells12 = o;
-					case 13: spells13 = o;
-					case 14: spells14 = o;
-					case 15: spells15 = o;
+					case 0: spells0 = o+1;
+					case 1: spells1 = o+1;
+					case 2: spells2 = o+1;
+					case 3: spells3 = o+1;
+					case 4: spells4 = o+1;
+					case 5: spells5 = o+1;
+					case 6: spells6 = o+1;
+					case 7: spells7 = o+1;
+					case 8: spells8 = o+1;
+					case 9: spells9 = o+1;
+					case 10: spells10 = o+1;
+					case 11: spells11 = o+1;
+					case 12: spells12 = o+1;
+					case 13: spells13 = o+1;
+					case 14: spells14 = o+1;
+					case 15: spells15 = o+1;
 				}
 				p++;
 
 			}
-		}
-		/*quests check, be sure to incement 'm' when you add more flags!*/
-		for (q=0, r=0; q<128; q++){
-			switch (r){
-					case 0: quests0 = 0;
-					case 1: quests1 = 0;
-					case 2: quests2 = 0;
-					case 3: quests3 = 0;
-					case 4: quests4 = 0;
-					case 5: quests5 = 0;
-					case 6: quests6 = 0;
-					case 7: quests7 = 0;
-					case 8: quests8 = 0;
-					case 9: quests9 = 0;
-					case 10: quests10 = 0;
-					case 11: quests11 = 0;
-					case 12: quests12 = 0;
-					case 13: quests13 = 0;
-					case 14: quests14 = 0;
-					case 15: quests15 = 0;
-				}
-			if (Q_ISSET(crt_ptr, q)){
-				switch (r){
-					case 0: quests0 = q;
-					case 1: quests1 = q;
-					case 2: quests2 = q;
-					case 3: quests3 = q;
-					case 4: quests4 = q;
-					case 5: quests5 = q;
-					case 6: quests6 = q;
-					case 7: quests7 = q;
-					case 8: quests8 = q;
-					case 9: quests9 = q;
-					case 10: quests10 = q;
-					case 11: quests11 = q;
-					case 12: quests12 = q;
-					case 13: quests13 = q;
-					case 14: quests14 = q;
-					case 15: quests15 = q;
-				}
-				r++;
-
 			}
-		}
+			/*quests check, be sure to incement 'm' when you add more flags!*/
+			for (q=0, r=0; q<128; q++){
+				switch (r){
+						case 0: quests0 = 0;
+						case 1: quests1 = 0;
+						case 2: quests2 = 0;
+						case 3: quests3 = 0;
+						case 4: quests4 = 0;
+						case 5: quests5 = 0;
+						case 6: quests6 = 0;
+						case 7: quests7 = 0;
+						case 8: quests8 = 0;
+						case 9: quests9 = 0;
+						case 10: quests10 = 0;
+						case 11: quests11 = 0;
+						case 12: quests12 = 0;
+						case 13: quests13 = 0;
+						case 14: quests14 = 0;
+						case 15: quests15 = 0;
+					}
+				if (Q_ISSET(crt_ptr, q)){
+					switch (r){
+						case 0: quests0 = q;
+						case 1: quests1 = q;
+						case 2: quests2 = q;
+						case 3: quests3 = q;
+						case 4: quests4 = q;
+						case 5: quests5 = q;
+						case 6: quests6 = q;
+						case 7: quests7 = q;
+						case 8: quests8 = q;
+						case 9: quests9 = q;
+						case 10: quests10 = q;
+						case 11: quests11 = q;
+						case 12: quests12 = q;
+						case 13: quests13 = q;
+						case 14: quests14 = q;
+						case 15: quests15 = q;
+					}
+					r++;
+
+				}
+			}
 
 
-		fprintf(fpt, "%i; %s; %s; %s; %s; %s; %s; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i \n",
-		i, crt_ptr->name, crt_ptr->description, crt_ptr->talk, crt_ptr->password, crt_ptr->key[0], crt_ptr->key[1], crt_ptr->key[2], crt_ptr->fd, crt_ptr->level, crt_ptr->type, crt_ptr->class, crt_ptr->race, crt_ptr->numwander, crt_ptr->alignment, crt_ptr->strength, crt_ptr->dexterity, crt_ptr->constitution, crt_ptr->intelligence, crt_ptr->piety, crt_ptr->hpmax, crt_ptr->hpcur, crt_ptr->mpmax, crt_ptr->mpcur, crt_ptr->armor, crt_ptr->thaco, crt_ptr->experience, crt_ptr->gold, crt_ptr->ndice, crt_ptr->sdice, crt_ptr->pdice, crt_ptr->special, crt_ptr->proficiency[0], crt_ptr->proficiency[1], crt_ptr->proficiency[2], crt_ptr->proficiency[3], crt_ptr->proficiency[4], crt_ptr->proficiency[5], crt_ptr->realm[0], crt_ptr->realm[1], crt_ptr->realm[2], crt_ptr->realm[3], crt_ptr->realm[4], crt_ptr->realm[5], crt_ptr->realm[6], crt_ptr->realm[7], spells0, spells1, spells2, spells3, spells4, spells5, spells6, spells7, spells8, spells9, spells10, spells11, spells12, spells13, spells14, spells15, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, quests0, quests1, quests2, quests3, quests4, quests5, quests6, quests7, quests8, quests9, quests10, quests11, quests12, quests13, quests14, quests15, crt_ptr->questnum, crt_ptr->carry[0], crt_ptr->carry[1], crt_ptr->carry[2], crt_ptr->carry[3], crt_ptr->carry[4], crt_ptr->carry[5], crt_ptr->carry[6], crt_ptr->carry[7], crt_ptr->carry[8], crt_ptr->carry[9], crt_ptr->rom_num, crt_ptr->bank_balance, crt_ptr->title, crt_ptr->misc_stats[0], crt_ptr->misc_stats[1], crt_ptr->misc_stats[2], crt_ptr->misc_stats[3], crt_ptr->misc_stats[4], crt_ptr->clanindex, crt_ptr->clanexp, crt_ptr->guildtype, crt_ptr->guildexp, crt_ptr->special1, crt_ptr->special2 );
-	}
-	else {
-		posit(8, 20); printf("error on monster %i \n", i );
-	}
+			fprintf(fpt,"%i;%s;%s;%s;%s;%s;%s;%s;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i\n",
+			i, crt_ptr->name, crt_ptr->description, crt_ptr->talk, crt_ptr->password, crt_ptr->key[0], crt_ptr->key[1], crt_ptr->key[2], crt_ptr->fd, crt_ptr->level, crt_ptr->type, crt_ptr->class, crt_ptr->race, crt_ptr->numwander, crt_ptr->alignment, crt_ptr->strength, crt_ptr->dexterity, crt_ptr->constitution, crt_ptr->intelligence, crt_ptr->piety, crt_ptr->hpmax, crt_ptr->hpcur, crt_ptr->mpmax, crt_ptr->mpcur, crt_ptr->armor, crt_ptr->thaco, crt_ptr->experience, crt_ptr->gold, crt_ptr->ndice, crt_ptr->sdice, crt_ptr->pdice, crt_ptr->special, crt_ptr->proficiency[0], crt_ptr->proficiency[1], crt_ptr->proficiency[2], crt_ptr->proficiency[3], crt_ptr->proficiency[4], crt_ptr->proficiency[5], crt_ptr->realm[0], crt_ptr->realm[1], crt_ptr->realm[2], crt_ptr->realm[3], crt_ptr->realm[4], crt_ptr->realm[5], crt_ptr->realm[6], crt_ptr->realm[7], spells0, spells1, spells2, spells3, spells4, spells5, spells6, spells7, spells8, spells9, spells10, spells11, spells12, spells13, spells14, spells15, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, quests0, quests1, quests2, quests3, quests4, quests5, quests6, quests7, quests8, quests9, quests10, quests11, quests12, quests13, quests14, quests15, crt_ptr->questnum, crt_ptr->carry[0], crt_ptr->carry[1], crt_ptr->carry[2], crt_ptr->carry[3], crt_ptr->carry[4], crt_ptr->carry[5], crt_ptr->carry[6], crt_ptr->carry[7], crt_ptr->carry[8], crt_ptr->carry[9], crt_ptr->rom_num, crt_ptr->bank_balance, crt_ptr->title, crt_ptr->misc_stats[0], crt_ptr->misc_stats[1], crt_ptr->misc_stats[2], crt_ptr->misc_stats[3], crt_ptr->misc_stats[4], crt_ptr->clanindex, crt_ptr->clanexp, crt_ptr->guildtype, crt_ptr->guildexp, crt_ptr->special1, crt_ptr->special2 );
+			}
+			else {
+				posit(8, 20); printf("error on monster %i \n", i );
+				//posit(24,40); printf("Hit Enter:"); getnum(&c,0,0);
+			}
 	}
 
 	fclose(fpt);
@@ -257,8 +1843,8 @@ void convert_to_csv(){
 		posit(5,20); printf("converting object %i\n", i);
 
 		/*flag check, be sure to incement 'm' when you add more flags!*/
-		for (m=0, n=0; m<128; m++){
-			switch (n){
+			for (m=0, n=0; m<128; m++){
+				switch (n){
 					case 0: flags0 = 0;
 					case 1: flags1 = 0;
 					case 2: flags2 = 0;
@@ -276,38 +1862,38 @@ void convert_to_csv(){
 					case 14: flags14 = 0;
 					case 15: flags15 = 0;
 				}
-			if (F_ISSET(obj_ptr, m)){
-				switch (n){
-					case 0: flags0 = m;
-					case 1: flags1 = m;
-					case 2: flags2 = m;
-					case 3: flags3 = m;
-					case 4: flags4 = m;
-					case 5: flags5 = m;
-					case 6: flags6 = m;
-					case 7: flags7 = m;
-					case 8: flags8 = m;
-					case 9: flags9 = m;
-					case 10: flags10 = m;
-					case 11: flags11 = m;
-					case 12: flags12 = m;
-					case 13: flags13 = m;
-					case 14: flags14 = m;
-					case 15: flags15 = m;
-				}
-				n++;
+				if (F_ISSET(obj_ptr, m)){
+					switch (n){
+						case 0: flags0 = m+1;
+						case 1: flags1 = m+1;
+						case 2: flags2 = m+1;
+						case 3: flags3 = m+1;
+						case 4: flags4 = m+1;
+						case 5: flags5 = m+1;
+						case 6: flags6 = m+1;
+						case 7: flags7 = m+1;
+						case 8: flags8 = m+1;
+						case 9: flags9 = m+1;
+						case 10: flags10 = m+1;
+						case 11: flags11 = m+1;
+						case 12: flags12 = m+1;
+						case 13: flags13 = m+1;
+						case 14: flags14 = m+1;
+						case 15: flags15 = m+1;
+					}
+					n++;
 
+				}
 			}
-		}
 		
 
 
-		fprintf(fpt, "%i; %s; %s; %s; %s; %s; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i\n", 
+		fprintf(fpt,"%i;%s;%s;%s;%s;%s;%s;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i\n",
 			i, obj_ptr->name, obj_ptr->description, obj_ptr->key[0], obj_ptr->key[1], obj_ptr->key[2], obj_ptr->use_output, obj_ptr->value, obj_ptr->weight, obj_ptr->type, obj_ptr->adjustment, obj_ptr->shotsmax, obj_ptr->shotscur, obj_ptr->ndice, obj_ptr->sdice, obj_ptr->pdice, obj_ptr->armor, obj_ptr->wearflag, obj_ptr->magicpower, obj_ptr->magicrealm, obj_ptr->special, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, obj_ptr->questnum, obj_ptr->strength, obj_ptr->dexterity, obj_ptr->constitution, obj_ptr->intelligence, obj_ptr->piety, obj_ptr->sets_flag[0], obj_ptr->sets_flag[1], obj_ptr->sets_flag[2], obj_ptr->sets_flag[3], obj_ptr->sets_flag[4], obj_ptr->sets_flag[5], obj_ptr->sets_flag[6], obj_ptr->sets_flag[7], obj_ptr->sets_flag[8], obj_ptr->sets_flag[9], obj_ptr->sets_flag[10], obj_ptr->sets_flag[11], obj_ptr->sets_flag[12], obj_ptr->sets_flag[13], obj_ptr->sets_flag[14], obj_ptr->sets_flag[15], obj_ptr->special1, obj_ptr->special2);
-	}
-	else {
-		posit(8, 20); printf("error on object %i \n", i );
-	}
+		}
+		else {
+			posit(8, 20); printf("error on object %i \n", i );
+		}
 	}
 	fclose(fpt);
 
@@ -315,13 +1901,19 @@ void convert_to_csv(){
 	posit(4,20); printf("converting rooms");
 	
 	fpt = fopen("rooms_datatbase.csv", "w+");
-	fprintf(fpt, "rom_num; name; description; lolevel; hilevel; special; trap; trapexit; track; flags0; flags1; flags2; flags3; flags4; flags5; flags6; flags7; flags8; flags9; flags10; flags11; flags12; flags13; flags14; flags15; random0; random1; random2; random3; random4; random5; random6; random7; random8; random9; traffic; perm0; ptime0; perm1; ptime1; perm2; ptime2; perm3; ptime3; perm4; ptime4; perm5; ptime5; perm6; ptime6; perm7; ptime7; perm8; ptime8; perm9; ptime9; operm0; optime0; operm1; optime1; operm2; optime2; operm3; optime3; operm4; optime4; operm5; optime5; operm6; optime6; operm7; optime7; operm8; optime8; operm9; optime9; beenhere; x1name; x1destination; x1key; x1flag0; x1flag1; x1flag2; x1flag3; x1flag4; x1flag5; x1flag6; x1flag7; x1flag8; x1flag9; x2name; x2destination; x2key; x2flag0; x2flag1; x2flag2; x2flag3; x2flag4; x2flag5; x2flag6; x2flag7; x2flag8; x2flag9; x3name; x3destination; x3key; x3flag0; x3flag1; x3flag2; x3flag3; x3flag4; x3flag5; x3flag6; x3flag7; x3flag8; x3flag9; x4name; x4destination; x4key; x4flag0; x4flag1; x4flag2; x4flag3; x4flag4; x4flag5; x4flag6; x4flag7; x4flag8; x4flag9; x5name; x5destination; x5key; x5flag0; x5flag1; x5flag2; x5flag3; x5flag4; x5flag5; x5flag6; x5flag7; x5flag8; x5flag9; x6name; x6destination; x6key; x6flag0; x6flag1; x6flag2; x6flag3; x6flag4; x6flag5; x6flag6; x6flag7; x6flag8; x6flag9; x7name; x7destination; x7key; x7flag0; x7flag1; x7flag2; x7flag3; x7flag4; x7flag5; x7flag6; x7flag7; x7flag8; x7flag9; x8name; x8destination; x8key; x8flag0; x8flag1; x8flag2; x8flag3; x8flag4; x8flag5; x8flag6; x8flag7; x8flag8; x8flag9\n");
+	fprintf(fpt, "rom_num; name; short_desc; long_desc; lolevel; hilevel; special; trap; trapexit; track; flags0; flags1; flags2; flags3; flags4; flags5; flags6; flags7; flags8; flags9; flags10; flags11; flags12; flags13; flags14; flags15; random0; random1; random2; random3; random4; random5; random6; random7; random8; random9; traffic; perm0; ptime0; perm1; ptime1; perm2; ptime2; perm3; ptime3; perm4; ptime4; perm5; ptime5; perm6; ptime6; perm7; ptime7; perm8; ptime8; perm9; ptime9; operm0; optime0; operm1; optime1; operm2; optime2; operm3; optime3; operm4; optime4; operm5; optime5; operm6; optime6; operm7; optime7; operm8; optime8; operm9; optime9; beenhere; x1name; x1destination; x1key; x1flag0; x1flag1; x1flag2; x1flag3; x1flag4; x1flag5; x1flag6; x1flag7; x1flag8; x1flag9; x2name; x2destination; x2key; x2flag0; x2flag1; x2flag2; x2flag3; x2flag4; x2flag5; x2flag6; x2flag7; x2flag8; x2flag9; x3name; x3destination; x3key; x3flag0; x3flag1; x3flag2; x3flag3; x3flag4; x3flag5; x3flag6; x3flag7; x3flag8; x3flag9; x4name; x4destination; x4key; x4flag0; x4flag1; x4flag2; x4flag3; x4flag4; x4flag5; x4flag6; x4flag7; x4flag8; x4flag9; x5name; x5destination; x5key; x5flag0; x5flag1; x5flag2; x5flag3; x5flag4; x5flag5; x5flag6; x5flag7; x5flag8; x5flag9; x6name; x6destination; x6key; x6flag0; x6flag1; x6flag2; x6flag3; x6flag4; x6flag5; x6flag6; x6flag7; x6flag8; x6flag9; x7name; x7destination; x7key; x7flag0; x7flag1; x7flag2; x7flag3; x7flag4; x7flag5; x7flag6; x7flag7; x7flag8; x7flag9; x8name; x8destination; x8key; x8flag0; x8flag1; x8flag2; x8flag3; x8flag4; x8flag5; x8flag6; x8flag7; x8flag8; x8flag9; death_rom\n");
+	fclose(fpt);
 
 	char xnames[8][20];
-	char str[2000];
+	char str1[2000];
+	char str2[2000];
+	char tempstring[2000];
+	char exitstr[2000];
 	int len;
+	int l, k;
 	int xrooms[8];
 	int xkeys[8];
+	int xkey;
 	int x1flags[10];
 	int x2flags[10];
 	int x3flags[10];
@@ -335,167 +1927,333 @@ void convert_to_csv(){
 	xtag *xt;
 	exit_ *exit;
 
-	
+	fpt = fopen("rooms_datatbase.csv", "w+");
 	for (i=0, j=0; i<15000; i++){
-				for (o=0; o<10; o++){
-										
-					x1flags[o] = 0;
-					x2flags[o] = 0;
-					x3flags[o] = 0;
-					x4flags[o] = 0;
-					x5flags[o] = 0;
-					x6flags[o] = 0;
-					x7flags[o] = 0;
-					x8flags[o] = 0;
+		printf("converting room %i\n", i);
+		//hello
+		/*for (o=0; o<10; o++){
+									
+			x1flags[o] = 0;
+			x2flags[o] = 0;
+			x3flags[o] = 0;
+			x4flags[o] = 0;
+			x5flags[o] = 0;
+			x6flags[o] = 0;
+			x7flags[o] = 0;
+			x8flags[o] = 0;
 					
-				}	
+		}*/
 		
-	if (load_rom(i, &rom_ptr) > -1) {
-		load_rom_from_file(i, &rom_ptr);
+		if (load_rom(i, &rom_ptr) > -1) {
+			load_rom_from_file(i, &rom_ptr);
 
-		posit(5,20); printf("converting room %i\n", i);
-
-		xt = rom_ptr->first_ext;
-
-		memset(str,0,strlen(str));
-		if (rom_ptr->long_desc){
-		strcpy(str, rom_ptr->long_desc);
-		len = strlen(str);
-			for (m=0; m<len-1; m++){
-				if (str[m] == '\n' || str[m] == ';'){
-					str[m] = ' ';
-				}
-			}
-		}
-		
-		
-		for (m=0, n=0; m<8; m++){
 			
-			strcpy(xnames[m], " ");
-			xrooms[m] = 0;
-			xkeys[m] = 0;
+			printf("room %i located and opened\n", i);
 
-			if (xt){
-				
-				strcpy(xnames[m], xt->ext->name);
-				
-				xrooms[m] = xt->ext->room;
-				xkeys[m] = xt->ext->key;
-				
-				
-				for (o=0, p=0; o<128; o++){
-					if (F_ISSET(xt->ext, o)){
-						if (p < 8){
-							switch (m){
-								case 0: x1flags[p] = o;
-								case 1: x2flags[p] = o;
-								case 2: x3flags[p] = o;
-								case 3: x4flags[p] = o;
-								case 4: x5flags[p] = o;
-								case 5: x6flags[p] = o;
-								case 6: x7flags[p] = o;
-								case 7: x8flags[p] = o;
-							}
-						}
-						p++;
+			xt = rom_ptr->first_ext;
+
+			memset(str1,0,strlen(str1));
+			if (rom_ptr->short_desc){
+			strcpy(str1, rom_ptr->short_desc);
+			len = strlen(str1);
+				for (m=0; m<len-1; m++){
+					if (str1[m] == '\n' || str1[m] == ';'){
+						str1[m] = ' ';
 					}
 				}
-			xt = xt->next_tag;
 			}
-			/*else{
+			memset(str2,0,strlen(str2));
+			if (rom_ptr->long_desc){
+				strcpy(str2, rom_ptr->long_desc);
+				len = strlen(str2);
+				for (m=0; m<len-1; m++){
+					if (str2[m] == '\n' || str2[m] == ';'){
+						str2[m] = ' ';
+					}
+				}
+			}
+		
+		
+			/*for (m=0, n=0; m<8; m++){
 				
+				memset(xnames[m],0,strlen(xnames[m]));
 				strcpy(xnames[m], " ");
-				
 				xrooms[m] = 0;
 				xkeys[m] = 0;
-				for (o=0; o<8; o++){
-					switch (m){
-						case 0: x1flags[o] = 0;
-						case 1: x2flags[o] = 0;
-						case 2: x3flags[o] = 0;
-						case 3: x4flags[o] = 0;
-						case 4: x5flags[o] = 0;
-						case 5: x6flags[o] = 0;
-						case 6: x7flags[o] = 0;
-						case 7: x8flags[o] = 0;
+	
+				if (xt){
+					
+					strcpy(xnames[m], xt->ext->name);
+				
+					xrooms[m] = xt->ext->room;
+					xkeys[m] = xt->ext->key;
+				
+				
+					for (o=0, p=0; o<128; o++){
+						if (F_ISSET(xt->ext, o)){
+							if (p < 8){
+								switch (m){
+									case 0: x1flags[p] = o+1;
+									case 1: x2flags[p] = o+1;
+									case 2: x3flags[p] = o+1;
+									case 3: x4flags[p] = o+1;
+									case 4: x5flags[p] = o+1;
+									case 5: x6flags[p] = o+1;
+									case 6: x7flags[p] = o+1;
+									case 7: x8flags[p] = o+1;
+								}
+							}
+							p++;
+						}
+					}
+				xt = xt->next_tag;
+				}
+				/*else{
+				
+					strcpy(xnames[m], " ");
+				
+					xrooms[m] = 0;
+					xkeys[m] = 0;
+					for (o=0; o<8; o++){
+						switch (m){
+							case 0: x1flags[o] = 0;
+							case 1: x2flags[o] = 0;
+							case 2: x3flags[o] = 0;
+							case 3: x4flags[o] = 0;
+							case 4: x5flags[o] = 0;
+							case 5: x6flags[o] = 0;
+							case 6: x7flags[o] = 0;
+							case 7: x8flags[o] = 0;
+						}
+					}
+				}*/
+
+			
+				/*if (xt){
+				xt = xt->next_tag;}*/
+			
+			
+		
+			/*flag check, be sure to incement 'm' when you add more flags!*/
+			for (m=0, n=0; m<128; m++){
+				switch (n){
+						case 0: flags0 = 0;
+						case 1: flags1 = 0;
+						case 2: flags2 = 0;
+						case 3: flags3 = 0;
+						case 4: flags4 = 0;
+						case 5: flags5 = 0;
+						case 6: flags6 = 0;
+						case 7: flags7 = 0;
+						case 8: flags8 = 0;
+						case 9: flags9 = 0;
+						case 10: flags10 = 0;
+						case 11: flags11 = 0;
+						case 12: flags12 = 0;
+						case 13: flags13 = 0;
+						case 14: flags14 = 0;
+						case 15: flags15 = 0;
+					}
+				if (F_ISSET(rom_ptr, m)){
+					switch (n){
+						case 0: flags0 = m+1;
+						case 1: flags1 = m+1;
+						case 2: flags2 = m+1;
+						case 3: flags3 = m+1;
+						case 4: flags4 = m+1;
+						case 5: flags5 = m+1;
+						case 6: flags6 = m+1;
+						case 7: flags7 = m+1;
+						case 8: flags8 = m+1;
+						case 9: flags9 = m+1;
+						case 10: flags10 = m+1;
+						case 11: flags11 = m+1;
+						case 12: flags12 = m+1;
+						case 13: flags13 = m+1;
+						case 14: flags14 = m+1;
+						case 15: flags15 = m+1;
+					}
+					n++;
+
+				}
+			}
+
+		
+		
+
+
+			
+			fprintf(fpt,"%i;",i);
+			fprintf(fpt,"%s;", rom_ptr->name);
+			fprintf(fpt,"%s;", str1);
+			fprintf(fpt,"%s;", str2);
+			fprintf(fpt,"%i;", rom_ptr->lolevel);
+			fprintf(fpt,"%i;", rom_ptr->hilevel);
+			fprintf(fpt,"%i;", rom_ptr->special);
+			fprintf(fpt,"%i;", rom_ptr->trap);
+			fprintf(fpt,"%i;", rom_ptr->trapexit);
+			fprintf(fpt,"%s;", rom_ptr->track);
+			fprintf(fpt,"%i;", flags0);
+			fprintf(fpt,"%i;", flags1);
+			fprintf(fpt,"%i;", flags2);
+			fprintf(fpt,"%i;", flags3);
+			fprintf(fpt,"%i;", flags4);
+			fprintf(fpt,"%i;", flags5);
+			fprintf(fpt,"%i;", flags6);
+			fprintf(fpt,"%i;", flags7);
+			fprintf(fpt,"%i;", flags8);
+			fprintf(fpt,"%i;", flags9);
+			fprintf(fpt,"%i;", flags10);
+			fprintf(fpt,"%i;", flags11);
+			fprintf(fpt,"%i;", flags12);
+			fprintf(fpt,"%i;", flags13);
+			fprintf(fpt,"%i;", flags14);
+			fprintf(fpt,"%i;", flags15);
+			fprintf(fpt,"%i;", rom_ptr->random[0]);
+			fprintf(fpt,"%i;", rom_ptr->random[1]);
+			fprintf(fpt,"%i;", rom_ptr->random[2]);
+			fprintf(fpt,"%i;", rom_ptr->random[3]);
+			fprintf(fpt,"%i;", rom_ptr->random[4]);
+			fprintf(fpt,"%i;", rom_ptr->random[5]);
+			fprintf(fpt,"%i;", rom_ptr->random[6]);
+			fprintf(fpt,"%i;", rom_ptr->random[7]);
+			fprintf(fpt,"%i;", rom_ptr->random[8]);
+			fprintf(fpt,"%i;", rom_ptr->random[9]);
+			//int * temp;
+			//char * temp2;
+			//temp2 = rom_ptr->traffic;
+			//temp = atoi(temp2);
+			//printf("Room Traffic is  %i\n", rom_ptr->traffic );
+			fprintf(fpt,"%i;", (rom_ptr->traffic - '0' +48));
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[0].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[0].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[1].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[1].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[2].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[2].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[3].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[3].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[4].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[4].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[5].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[5].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[6].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[6].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[7].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[7].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[8].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[8].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[9].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_mon[9].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[0].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[0].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[1].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[1].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[2].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[2].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[3].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[3].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[4].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[4].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[5].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[5].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[6].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[6].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[7].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[7].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[8].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[8].interval);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[9].misc);
+			fprintf(fpt,"%i;", rom_ptr->perm_obj[9].interval);
+			fprintf(fpt,"%i;", rom_ptr->beenhere);
+			
+			
+
+			//for the exits, compile a string structured as follows:
+			//"name, room, key, flag1, 2, 3, 4, 5, 6, 7, 8, 9, 10;"
+			//capacity for up to 50 exits
+		
+			
+			xt = rom_ptr->first_ext;
+			for (m=0, n=0; m<50; m++){
+				strcpy(exitstr, "");
+				strcpy(tempstring, "");
+				
+				if (n==0 && xt){
+					if (xt->ext){
+						strcpy(exitstr, "");
+					
+						strcpy(tempstring, "");
+						sprintf(tempstring, "%s", xt->ext->name);
+						strcat(exitstr, tempstring);
+					
+						strcat(exitstr, ",");
+					
+						strcpy(tempstring, "");
+						sprintf(tempstring, "%i", xt->ext->room);
+						strcat(exitstr, tempstring);
+					 
+						strcat(exitstr, ",");
+					
+						strcpy(tempstring, "");
+						xkey = xt->ext->key;
+						sprintf(tempstring, "%i", xkey);
+						strcat(exitstr, tempstring);
+					 
+						strcat(exitstr, ",");
+						//flags now
+				
+						//if there is an exit
+					
+						//accept all 128 flags
+						for (o=0, p=0; o<128; o++){
+						
+						
+								if (F_ISSET(xt->ext, o)){
+									strcpy(tempstring, "");
+									sprintf(tempstring, "%i", o+1);
+									strcat(exitstr, tempstring);
+								
+								}
+							
+						
+							strcat(exitstr, ", ");
+						}
+					
+				
+						strcat(exitstr, ";");
 					}
 				}
-			}*/
-
+			 	else if (n > 0 || !xt) strcat(exitstr, "0;");
+				//get ready for the next one
 			
-			/*if (xt){
-			xt = xt->next_tag;}*/
-			
-		}
-		
-		/*flag check, be sure to incement 'm' when you add more flags!*/
-		for (m=0, n=0; m<128; m++){
-			switch (n){
-					case 0: flags0 = 0;
-					case 1: flags1 = 0;
-					case 2: flags2 = 0;
-					case 3: flags3 = 0;
-					case 4: flags4 = 0;
-					case 5: flags5 = 0;
-					case 6: flags6 = 0;
-					case 7: flags7 = 0;
-					case 8: flags8 = 0;
-					case 9: flags9 = 0;
-					case 10: flags10 = 0;
-					case 11: flags11 = 0;
-					case 12: flags12 = 0;
-					case 13: flags13 = 0;
-					case 14: flags14 = 0;
-					case 15: flags15 = 0;
+				fprintf(fpt, "%s", exitstr);
+				printf("Exit %i: %s\n", m,  exitstr );
+				if (xt){
+					if (xt->next_tag){
+						xt = xt->next_tag;	
+					}
+					else{
+						n++;
+					}
 				}
-			if (F_ISSET(rom_ptr, m)){
-				switch (n){
-					case 0: flags0 = m;
-					case 1: flags1 = m;
-					case 2: flags2 = m;
-					case 3: flags3 = m;
-					case 4: flags4 = m;
-					case 5: flags5 = m;
-					case 6: flags6 = m;
-					case 7: flags7 = m;
-					case 8: flags8 = m;
-					case 9: flags9 = m;
-					case 10: flags10 = m;
-					case 11: flags11 = m;
-					case 12: flags12 = m;
-					case 13: flags13 = m;
-					case 14: flags14 = m;
-					case 15: flags15 = m;
+				else {
+					n++;
 				}
-				n++;
 
 			}
+			
+			printf("%i\n", rom_ptr->death_rom);
+			fprintf(fpt, "%i\n", rom_ptr->death_rom);
+				
 		}
-		
-
-
-		fprintf(fpt, "%i; %s; %s; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %s; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i; %i\n",
-		i, rom_ptr->name, str, rom_ptr->lolevel, rom_ptr->hilevel, rom_ptr->special, rom_ptr->trap, rom_ptr->trapexit, rom_ptr->track, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, rom_ptr->random[0], rom_ptr->random[1], rom_ptr->random[2], rom_ptr->random[3], rom_ptr->random[4], rom_ptr->random[5], rom_ptr->random[6], rom_ptr->random[7], rom_ptr->random[8], rom_ptr->random[9], rom_ptr->traffic,
-		rom_ptr->perm_mon[0].misc, rom_ptr->perm_mon[0].interval, rom_ptr->perm_mon[1].misc, rom_ptr->perm_mon[1].interval, rom_ptr->perm_mon[2].misc, rom_ptr->perm_mon[2].interval, rom_ptr->perm_mon[3].misc, rom_ptr->perm_mon[3].interval, rom_ptr->perm_mon[4].misc, rom_ptr->perm_mon[4].interval, rom_ptr->perm_mon[5].misc, rom_ptr->perm_mon[5].interval, rom_ptr->perm_mon[6].misc, rom_ptr->perm_mon[6].interval, rom_ptr->perm_mon[7].misc, rom_ptr->perm_mon[7].interval, rom_ptr->perm_mon[8].misc, rom_ptr->perm_mon[8].interval, rom_ptr->perm_mon[9].misc, rom_ptr->perm_mon[9].interval,
-		rom_ptr->perm_obj[0].misc, rom_ptr->perm_obj[0].interval, rom_ptr->perm_obj[1].misc, rom_ptr->perm_obj[1].interval, rom_ptr->perm_obj[2].misc, rom_ptr->perm_obj[2].interval, rom_ptr->perm_obj[3].misc, rom_ptr->perm_obj[3].interval, rom_ptr->perm_obj[4].misc, rom_ptr->perm_obj[4].interval, rom_ptr->perm_obj[5].misc, rom_ptr->perm_obj[5].interval, rom_ptr->perm_obj[6].misc, rom_ptr->perm_obj[6].interval, rom_ptr->perm_obj[7].misc, rom_ptr->perm_obj[7].interval, rom_ptr->perm_obj[8].misc, rom_ptr->perm_obj[8].interval, rom_ptr->perm_obj[9].misc, rom_ptr->perm_obj[9].interval, 
-		rom_ptr->beenhere, 
-		xnames[0], xrooms[0], xkeys[0], x1flags[0], x1flags[1], x1flags[2], x1flags[3], x1flags[4], x1flags[5], x1flags[6], x1flags[7], x1flags[8], x1flags[9],
-		xnames[1], xrooms[1], xkeys[1], x2flags[0], x2flags[1], x2flags[2], x2flags[3], x2flags[4], x2flags[5], x2flags[6], x2flags[7], x2flags[8], x2flags[9],
-		xnames[2], xrooms[2], xkeys[2], x3flags[0], x3flags[1], x3flags[2], x3flags[3], x3flags[4], x3flags[5], x3flags[6], x3flags[7], x3flags[8], x3flags[9],
-		xnames[3], xrooms[3], xkeys[3], x4flags[0], x4flags[1], x4flags[2], x4flags[3], x4flags[4], x4flags[5], x4flags[6], x4flags[7], x4flags[8], x4flags[9],
-		xnames[4], xrooms[4], xkeys[4], x5flags[0], x5flags[1], x5flags[2], x5flags[3], x5flags[4], x5flags[5], x5flags[6], x5flags[7], x5flags[8], x5flags[9],
-		xnames[5], xrooms[5], xkeys[5], x6flags[0], x6flags[1], x6flags[2], x6flags[3], x6flags[4], x6flags[5], x6flags[6], x6flags[7], x6flags[8], x6flags[9],
-		xnames[6], xrooms[6], xkeys[6], x7flags[0], x7flags[1], x7flags[2], x7flags[3], x7flags[4], x7flags[5], x7flags[6], x7flags[7], x7flags[8], x7flags[9],
-		xnames[7], xrooms[7], xkeys[7], x8flags[0], x8flags[1], x8flags[2], x8flags[3], x8flags[4], x8flags[5], x8flags[6], x8flags[7], x8flags[8], x8flags[9]);
-		
-	}
-	else {
-		posit(8, 20); printf("error on room %i \n", i );
-	}
+		else {
+			posit(8, 20); printf("error on room %i \n", i );
+		}
 	}
 
+	
 	fclose(fpt);
-
 	return;
 }
 

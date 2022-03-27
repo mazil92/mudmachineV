@@ -1,6 +1,9 @@
 /*
 Some utilities by smithy
 
+27/03/2022: objectives command now reads from 
+			objectives file in ../bin
+
 21/01/2022: detect spell realm
 
 20/01/2022: Objectives Command
@@ -89,14 +92,70 @@ int objectives(creature *ply_ptr, cmd *cmnd){
 	int fd;
 
 	fd = ply_ptr->fd;
-	output(fd, "\n---------CURRENT OBJECTIVES---------\n");
 	
+	//find the master objectives file in ../bin
+	//read the objectives file
+	//the structure of the file is pairs of lines
+	//first lines give the lower and upper 
+	//bounds to display the objective
+	//second lines give the data to be displayed
+	char filename[80] = {};
+	char str[10] = {};
+	FILE *fpt;
 
-	if (!Q_ISSET(ply_ptr, 12)){
-		output(fd, "Quest 1: Help Farmer Joe");
+	strcpy(filename, "../bin/objectives.master\0");
+	fpt = fopen(filename, "r");
+	char array[750][80];
+	int c,i,j, result;
+
+	//clean the array
+	for (i=0; i<750; i++){
+		strcpy(array[i], "");
 	}
 
+	//iterate through the file and load the values into 
+	//a handy array for future reading
+	c = 0;
+	while (result != EOF){
+		result = fscanf(fpt, "%79[^,\n]", str);
+		result = fscanf(fpt, "%*c");
+		strcpy(array[c], str);
+		
+		//sprintf(g_buffer, "array %i: ", c);
+		//output(fd, g_buffer);
+		//output(fd, array[c]);
+		//output(fd, "\n");
 
+		c++;
+	}
+	fclose(fpt);
+
+	output(fd, "\n---------CURRENT OBJECTIVES---------\n");
+	//read through the array
+	//every even line in groups of 3
+	//eg: (0, 1) will describe the bounds
+	// (2) will describe the output
+
+	
+	for (i = 0, j =0; i < 50; i++){
+		//output(fd, "hey");
+		//sprintf(g_buffer, "array[%i]: %i, objective check = %i \n", (i*3), atoi(array[i*3]), objective_check(ply_ptr, atoi(array[i*3])));
+		//output(fd, g_buffer);
+		if (array[i*3 +0]){
+			//sprintf(g_buffer, "array[%i]: %i, objective check = %i \n", i*3, atoi(array[i*3]), objective_check(ply_ptr, atoi(array[i*3])));
+			//output(fd, g_buffer);
+			if (objective_check(ply_ptr, atoi(array[i*3 + 0])) && !objective_check(ply_ptr, atoi(array[i*3 + 1]))){
+		
+				output(fd, array[i*3 + 2]);
+				output(fd, "\n");
+				j++;
+			}
+		}
+	}
+	if (j == 0){
+		output(fd, "No objectives currently available\n");
+	}
+	output(fd, "\n");
 	return (0);
 }
 

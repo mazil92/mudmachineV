@@ -1,4 +1,9 @@
 /*
+26/03/2022
+NEW ADDITIONS BY SMITHY
+ADDED FUNCTIONALITY TO TALKING
+NOW WITH CONDITIONAL TALK STRINGS
+
  * COMMAND8.C:
  *
  *	Additional user routines.
@@ -817,8 +822,77 @@ int talk( creature *ply_ptr, cmd *cmnd )
 			m2args(ply_ptr, crt_ptr));
 
 		tp = crt_ptr->first_tlk;
+		
+		
+
 		while(tp) {
-			if(!strcmp(cmnd->str[2], tp->key)) {
+		//SMITHY ADDITIONS HERE
+		//seperate the words out of the key string
+			int 	index =0, num =0,i, n;
+			char	*word[4];
+			char 	keystring[80];
+			char 	attribute[10] = "";
+			char 	operand[6] = "";
+			char 	value[10] = "";	
+			
+			for (i=0;i<4;i++)
+			word[i] = 0;
+
+			strcpy(attribute, "");
+			strcpy(operand, "");
+			strcpy(value, "");	
+
+			//output(fd, "outputting keystring:");
+			//output(fd, tp->key);
+			//output(fd, "\n");
+			strcpy(keystring, tp->key);
+			//output(fd, keystring);
+			for (n=0;n<4;n++){
+
+				i=0;
+				while(isalpha((int)keystring[i +index]) || isdigit((int)keystring[i +index]) || 
+					keystring[i +index] == '-')
+					i++;
+				word[n] = (char *)malloc(sizeof(char)*i + 1);
+				if(!word[n])
+					merror("talk_crt_act", FATAL);
+
+				memcpy(word[n],&keystring[index],i);
+				//output(fd, word[n]);
+				//output(fd, "\n");
+				word[n][i] = 0;
+
+				while(isspace((int)keystring[index +i]))
+					i++;
+	
+				index += i;
+				num++;
+				if(tp->key[index] == 0)
+					break;
+
+			}
+		// if there are multiple words, the 2nd, 3rd and 4th can be
+		// assigned to their appropriate destinations
+			if (word[1]){
+				
+				strcat(word[1], "\0");
+				strcpy(attribute, word[1]);
+				strcat(word[2], "\0");
+				strcpy(operand, word[2]);
+				strcat(word[3], "\0");
+				strcpy(value, word[3]);
+				/*output(fd, "outputting attribute:");
+				output(fd, attribute);
+				output(fd, "\n");
+				output(fd, "outputting operand:");
+				output(fd, operand);
+				output(fd, "\n");
+				output(fd, "outputting value:");
+				output(fd, value);
+				output(fd, "\n");*/
+			}
+		//now we can resume the normal code
+			if(!strcmp(cmnd->str[2], word[0]) && (conditionsmet(ply_ptr, attribute, operand, value) || !word[1])) {
 				sprintf(g_buffer, "%%M says to %%M, \"%s\".", tp->response);
 				broadcast_rom(fd, ply_ptr->rom_num,	g_buffer, 
 					m2args( crt_ptr, ply_ptr ));
@@ -935,7 +1009,7 @@ switch(tt->type){
 			}
 		}
 		break;
-	case 4:
+	case 4: //give
 		i = atoi(tt->action);
 		if (i > 0){
 			n=load_obj(i, &obj_ptr);
@@ -975,8 +1049,199 @@ switch(tt->type){
 			}
         }  
 		break;
+	case 5: //OBJECTIVES
+		//read the objective number off the talk pointer
+		i = atoi(tt->action);
+
+		//check if the player has already done that one
+		if (!objective_check(ply_ptr, i)){
+			//if they haven't, grant it and
+			//give them a notification that their
+			//objectives have been updated
+			set_objective(ply_ptr, i);
+		}	
+		
+		
+		break;
 	default:
 		break;
 	}
 return;
+}
+
+int objective_check(creature *ply_ptr, int objective){
+	int ret =0;
+	int c,i,j, result;
+	char filename[80] = {};
+	char str[10] = {};
+	FILE *fpt;
+	char array[250][10];
+	// load the player's file and make one for them if they don't already have it
+	strcpy(filename, "../player/");
+	strcat(filename, ply_ptr->name);
+	strcat(filename, ".objectives\0");
+	fpt = fopen(filename, "a+");
+	fclose(fpt);
+	fpt = fopen(filename, "r");
+	
+
+	//clean the array
+	for (i=0; i<250; i++){
+		strcpy(array[i], "");
+	}
+	//iterate through the file and load the values into 
+	//a handy array for future reading
+	c = 0;
+	while (result != EOF){
+		result = fscanf(fpt, "%11[^,]", str);
+		result = fscanf(fpt, "%*c");
+		strcpy(array[c], str);
+		c++;
+
+	}
+	//iterate through the array and ask if any of the values
+	//match the objective we are currently checking
+	for(i=0, j=0; i<250; i++){
+		if (array[i]){
+			//sprintf(g_buffer, "array[%i]: %i. objective: %i", i, atoi(array[i]), objective);
+			//output(ply_ptr->fd, g_buffer);
+			if (atoi(array[i]) == objective){
+				j = 1;
+			}
+		}
+	}
+	fclose(fpt);
+	return(j);
+}
+
+int set_objective(creature *ply_ptr, int objective){
+	char filename[80] = {};
+	char str[10] = {};
+	FILE *fpt;
+	
+	//firstly check if they have done it already
+	//if they haven't, proceed
+	if (!objective_check(ply_ptr, objective)){
+		//find the player's file and open it
+	
+		strcpy(filename, "../player/");
+		strcat(filename, ply_ptr->name);
+		strcat(filename, ".objectives\0");
+		fpt = fopen(filename, "a+");
+		//add the objective number to the end of the file
+		strcpy(str, "");
+		sprintf(str, "%i", objective);
+		strcat(str, ", \0");
+		fprintf(fpt, str);
+
+		//let the player know they done good
+		output(ply_ptr->fd, "\n Your objective log has been updated!");
+		output(ply_ptr->fd, "\n Type 'objectives' to read more");
+ 		output(ply_ptr->fd, "\n");
+		//close the file
+		fclose(fpt);
+	}
+ 	
+	
+ 	return(0);
+}
+
+
+/*   CONDITIONS MET 
+THIS function looks at the inputted attributes of a player
+and evaluates if they meet those conditions
+returns 1 on succes and 0 on failure*/
+
+int conditionsmet(creature *ply_ptr, char *attribute, char *operand, char *value){
+	int ret =0;
+	int stat =0;
+
+	//output(ply_ptr->fd, "comparing a stat for a talkfile\n");
+		
+	//consider what attribute the talk string is asking for
+	// and place that value into the "stat" variable
+	if (!strcmp(attribute ,"STRENGTH")){
+		stat = ply_ptr->strength;
+	}
+	if (!strcmp(attribute ,"DEX")){
+		stat = ply_ptr->dexterity;
+	}
+	if (!strcmp(attribute ,"CON")){
+		stat = ply_ptr->constitution;
+	}
+	if (!strcmp(attribute ,"INT")){
+		stat = ply_ptr->intelligence;
+	}
+	if (!strcmp(attribute ,"PIETY")){
+		stat = ply_ptr->piety;
+	}
+	if (!strcmp(attribute ,"LEVEL")){
+		stat = ply_ptr->level;
+	}
+	if (!strcmp(attribute ,"ALIGN")){
+		stat = ply_ptr->alignment;
+	}
+	if (!strcmp(attribute ,"CLASS")){
+		stat = ply_ptr->class;
+	}
+	if (!strcmp(attribute ,"RACE")){
+		stat = ply_ptr->race;
+	}
+	if (!strcmp(attribute ,"QUEST")){
+		if (Q_ISSET(ply_ptr, atoi(value))){
+			stat =1;
+		} 
+		else stat = -1;
+	}
+	if (!strcmp(attribute ,"SPELL")){
+		if (S_ISSET(ply_ptr, atoi(value))){
+			stat =1;
+		} 
+		else stat = -1;
+	}
+	if (!strcmp(attribute ,"FLAG")){
+		if (F_ISSET(ply_ptr, atoi(value))){
+			stat =1;
+		} 
+		else stat = -1;
+	}
+	if (!strcmp(attribute ,"OBJ")){
+		if (objective_check(ply_ptr, atoi(value))){
+			stat =1;
+		} 
+		else stat = -1;
+	}
+
+	//consider what OPERAND is being called and then compare
+	//the stat and the value to determine success
+	if (!strcmp(operand,"ABOVE")){
+		//output(ply_ptr->fd, "comparing a stat to be ABOVE threshold\n");
+		//sprintf(g_buffer, "stat is %i and value is %i\n", stat, atoi(value));
+		//output(ply_ptr->fd, g_buffer);
+		if (stat > atoi(value)){
+			ret = 1;
+		}
+	}
+	if (!strcmp(operand,"BELOW")){
+		if (stat < atoi(value)){
+			ret = 1;
+		}
+	}
+	if (!strcmp(operand,"EQUAL")){
+		if (stat == atoi(value)){
+			ret = 1;
+		}
+	}
+	if (!strcmp(operand,"TRUE")){
+		if (stat == 1){
+			ret = 1;
+		}
+	}
+	if (!strcmp(operand,"FALSE")){
+		if (stat == -1){
+			ret = 1;
+		}
+	}
+
+	return(ret);	
 }

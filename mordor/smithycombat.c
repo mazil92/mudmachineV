@@ -475,134 +475,104 @@ always have DHAND enabled*/
 
 }
 
+int damage_amounts_from_percentage_array(creature *att_ptr, creature *vic_ptr, int percentage_array[13], int amount_array[13], int damage){
+// this function generates the damage amounts array
+// you will have to initialise the amounts array from outside this function
+// The function returns the total amount of damage
+	int j =0, k , total = 0;
+	float DR, resistance, amt, confidence;
+
+	//clear the damage arrays
+    for (k=0, j=0; k < 13; k++){
+        amount_array[k] = 0;
+   	}
+
+   	//loop through the 13 damage types, examine if damage is being dealt
+   	for (k=0, j=0; k < 13; k++){
+   		if (percentage_array[k]){
+   			
+   			DR = compute_DR(vic_ptr);
+   			resistance = compute_resistance(vic_ptr, k);
+   			amt = damage;
+   			amt = amt * percentage_array[k]/100;
+   			confidence = armor_confidence(vic_ptr);
+
+   			amount_array[k] = calc_damage(amt, DR, resistance, confidence);
+
+   			total += amount_array[k];
+   			
+   		}
+   		
+   	}
+   	return(total);
+}
+
+void damage_percentage_array_from_attack(creature *crt_ptr, int damage_array[13]){
+//this function generates the damage percentages array 
+//from either players or creatures doing a physical attack
+//you will have to initialise the array from outside this function
+	int j =0, k;
+	//clear the damage arrays
+        for (k=0, j=0; k < 13; k++){
+        	damage_array[k] = 0;
+        	}
+
+        if (crt_ptr->type == PLAYER){
+        	for (k=0, j=0; k<13; k++){
+        	
+        //check what the player's weapon deals in the setsflag array
+        		if (crt_ptr->ready[WIELD-1]){
+        			if (F_ISSET(crt_ptr->ready[WIELD-1], OCUSTOMDAMAGE) && crt_ptr->ready[WIELD-1]->sets_flag[k]){
+        				damage_array[k] += crt_ptr->ready[WIELD-1]->sets_flag[k];
+        			}
+        		}
+        //check for envenom
+        		if (k == DPOISON-1 && F_ISSET(crt_ptr, PENVENOM)){
+        			damage_array[k] += 100;
+           			F_CLR(crt_ptr, PENVENOM);
+        		}
+        //check for other damage bonuses
+        	}
+        //check if the weapon doesn't use custom damage
+        	if (crt_ptr->ready[WIELD-1]){
+        		if (!F_ISSET(crt_ptr->ready[WIELD-1], OCUSTOMDAMAGE)){
+        			//update the damage array at the position of the wielded weapon's type
+        			damage_array[crt_ptr->ready[WIELD-1]->type] += 100;
+        		}
+        	}
+        	else{
+        		//just give barehand
+        		damage_array[DHAND-1] += 100;
+        	}
+    	} //end of it its a player
+
+    	else{
+    		//cant be bothered with creatures today
+    	}
+
+
+
+}
+
 void combat_output (creature *ply_ptr, creature *crt_ptr, int n){
 	/*DAMAGE IS BEING DONE HERE. n above is the damage value that was rolled.
 SO NOW WE CARE ABOUT DAMAGE TYPES
 AND RESISTANCES*/
 	float temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, tempdam;
 	int j =0, k, total =0, fd, x; 
-	int damage[13];
+	int damage_percentages[13], damage_amounts[13];
 	char dmgstr[80], tempstr[80]; 
         
 	fd = ply_ptr->fd;
         
-        for (k=0, j=0; k < 13; k++){
-        	damage[k] = 0;}
-        	
-        if (ply_ptr->ready[WIELD-1]){
-        for (k=0, j=0; k < 13; k++){
-        	
-        	/*check if the attacker's weapon has damage in that type
-        	assign it the corresponding amount of damage based on n
-        	then check the defender's resistance to that type
-        	then run the do_attacking function on that amount of damage
-        	and then add that amount of damage to that part of the damage
-        	array
-
-        	after the for loop, read the array again to output it
-        	However, if no damage types were recorded as being used
-        	you can then check the weapons type and just do n damage
-        	as that type (or barehand as appropriate)*/
-        		
-        		temp8 = ply_ptr->ready[WIELD-1]->sets_flag[k];
-
-        		if (F_ISSET(ply_ptr, PENVENOM)){
-        			if (k == DPOISON-1){
-        				temp8 += 100;
-        				F_CLR(ply_ptr, PENVENOM);
-        				
-        				if (j == 0 && !ply_ptr->ready[WIELD-1]->sets_flag[DMAGIC -1] && !ply_ptr->ready[WIELD-1]->sets_flag[DDIVINE-1]){
-        					j ++;
-        					
-        					tempdam = calc_damage((float)n,(float)compute_DR(crt_ptr),(float)compute_resistance(crt_ptr, ply_ptr->ready[WIELD-1]->type+1),(float)armor_confidence(crt_ptr));
-        					damage[ply_ptr->ready[WIELD-1]->type] = (int)tempdam;
-        					damage[ply_ptr->ready[WIELD-1]->type] = MAX(0, damage[ply_ptr->ready[WIELD-1]->type]);
-        					total = total + damage[ply_ptr->ready[WIELD-1]->type];
-        					do_attacking(damage[ply_ptr->ready[WIELD-1]->type], ply_ptr, crt_ptr);
-        				}
-        			}
-        			/*This is a bit clunky but I don't care
-        			if the weapon hasn't done any other damage yet, 
-        			add it's normal damage type now*/
-        			
-        		}
-        		
-
-
-        		if (temp8){
-        			
-        			
-
-        			j++;
-        			
-
-        			temp1 = (float)n;
-        			temp2 = (float)(temp8);
-
-        			tempdam = temp1*(temp2/100);
-        			/*sprintf(g_buffer, "|%f, ", tempdam);
-        			output(fd, g_buffer);*/
-        			/*damage[k] = (int)tempdam;*/
-        			/*sprintf(g_buffer, "%f, %f, %f| ", (float)compute_DR_creature(crt_ptr),(float)compute_resistance_creature(crt_ptr, k+1),(float)armor_confidence(crt_ptr));
-        			output(fd, g_buffer);*/
-        			if (crt_ptr->type == MONSTER){
-        				
-        				tempdam = calc_damage(tempdam,(float)compute_DR_creature(crt_ptr),(float)compute_resistance_creature(crt_ptr, k+1),(float)armor_confidence(crt_ptr));
-        				/*sprintf(g_buffer, "|%f| ", tempdam);
-        				output(fd, g_buffer);*/
-        				damage[k] = (int)tempdam;
-        			
-        			}
-        			if (crt_ptr->type == PLAYER){
-        				
-        				tempdam = calc_damage((float)damage[k],(float)compute_DR_player(crt_ptr),(float)compute_resistance_player(crt_ptr, k+1),(float)armor_confidence(crt_ptr));
-        				damage[k] = (int)tempdam;
-        				
-        			}
-        			
-        			damage[k] = MAX(0, damage[k]);
-        			
-        			total = total + damage[k];
-        			
-        			do_attacking(damage[k], ply_ptr, crt_ptr);
-        			
-        		}
-        		
-        	}
-        }
+    //calc the damage percentages
+	damage_percentage_array_from_attack(ply_ptr, damage_percentages);
+    //calc the damage amounts
+	total = damage_amounts_from_percentage_array(ply_ptr, crt_ptr, damage_percentages, damage_amounts, n);
+    //do the attacking    
+	do_attacking(total, ply_ptr, crt_ptr);
+	
         
-        if (j == 0){
-        	
-        	if (crt_ptr->type == MONSTER){
-				
-				if (ply_ptr->ready[WIELD-1]){
-					total = (int)calc_damage((float)n, (float)compute_DR_creature(crt_ptr), (float)compute_resistance_creature(crt_ptr, ply_ptr->ready[WIELD-1]->type + 1), (float)armor_confidence(crt_ptr));
-				}
-				else{
-					temp3 = (float)n;
-					temp4 = (float)compute_DR_creature(crt_ptr);
-					temp5 = (float)compute_resistance_creature(crt_ptr, DHAND);
-					temp6 = (float)armor_confidence(crt_ptr);
-					temp7 = calc_damage(temp3, temp4, temp5, temp6);
-					/*sprintf(g_buffer, "\n|| %f, %f, %f, %f || %f || %f ||", temp3, temp4, temp5, temp6, temp7, (temp3 - (temp4/10 * temp5/100 * temp6/100)));
-					output(fd, g_buffer);*/
-					total = (int)temp7;					
-	  			}
-			}
-			else {
-		   		if (ply_ptr->ready[WIELD-1]){
-					
-					total = (int)calc_damage((float)n, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, ply_ptr->ready[WIELD-1]->type +1), (float)armor_confidence(crt_ptr));
-	   			}
-	   			else{		   		
-	   				total = (int)calc_damage((float)n, (float)compute_DR_player(crt_ptr), (float)compute_resistance_player(crt_ptr, DHAND), (float)armor_confidence(crt_ptr));
-				}
-			}
-       		total = MAX(0, total);
-       		
-        	do_attacking(total, ply_ptr, crt_ptr);
-        	
-        }
 
         
         sprintf(g_buffer, "You hit for %d damage.\n", total);
@@ -617,7 +587,7 @@ AND RESISTANCES*/
         sprintf(tempstr, "");
 		for (k=0, j=0; k < 13; k++){
 			
-			if (damage[k] != 0){
+			if (damage_amounts[k] != 0){
 
 				if (j > 0)
         			{
@@ -625,7 +595,7 @@ AND RESISTANCES*/
         			}
 				j++;
 				x = k;
-				damage_output(ply_ptr, damage[k], k+1);
+				damage_output(ply_ptr, damage_amounts[k], k+1);
 				switch (x){
 					case 0: sprintf(dmgstr, " sharp"); output(fd, dmgstr); break;
 					case 1: sprintf(dmgstr, " thrust"); output(fd, dmgstr); break;

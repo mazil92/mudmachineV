@@ -17,6 +17,9 @@ extern void getnums(long *i, long orig, long min, long max);
 extern void getstr(char *str, char *origstr, int maxlen);
 extern void convert_to_csv();
 extern void convert_from_csv();
+extern int save_creature(creature *crt_ptr, int index);
+extern int save_object(object *obj_ptr, int index);
+extern int save_room(room *rom_ptr, int index);
 
 /* prototypes for editor2.c */
 extern void edit_player();

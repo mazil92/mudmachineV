@@ -287,6 +287,8 @@ extern int armor_confidence (creature *crt_ptr);
 extern void combat_output (creature *ply_ptr, creature *crt_ptr, int n);
 extern long compute_resistance(creature *crt_ptr, int damage_type);
 extern short compute_DR (creature *crt_ptr);
+extern void damage_percentage_array_from_attack(creature *crt_ptr, int damage_array[13]);
+extern int damage_amounts_from_percentage_array(creature *att_ptr, creature *vic_ptr, int percentage_array[13], int amount_array[13], int damage);
 
 /* smithycommand1.c */
 extern int midas(creature *ply_ptr, cmd *cmnd);
@@ -445,8 +447,9 @@ extern int save_ply_cmd( creature *ply_ptr, cmd *cmnd );
 extern int save_ply( creature *ply_ptr );
 extern int talk( creature *ply_ptr, cmd *cmnd );
 extern void talk_action( creature *ply_ptr, creature *crt_ptr, ttag *tt );
-
-
+extern int conditionsmet(creature *ply_ptr, char *attribute, char *operand, char *value);
+extern int set_objective(creature *ply_ptr, int objective);
+extern int objective_check(creature *ply_ptr, int objective);
 /* COMMAND9.C */
 extern int bribe(creature *ply_ptr, cmd *cmnd );
 extern int haste( creature *ply_ptr, cmd *cmnd );

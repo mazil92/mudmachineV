@@ -1,3 +1,5 @@
+//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
+
 /*New commands made by Smithy
 22/01/2022: envenom
 
