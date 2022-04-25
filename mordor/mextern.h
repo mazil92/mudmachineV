@@ -10,6 +10,13 @@
  *
  * $Log: mextern.h,v $
  *
+28/03/2022:
+objective_check
+skill_check
+set_skill
+set_objective
+skilltree
+
 10/01/2022:
 added from smithycombat:
 player_dealing_damage
@@ -265,10 +272,64 @@ extern char guilds[][30];
 
 typedef int (*SPELLFN)();
 
+/*smithymagic1.c*/
+extern int smithy_custom_one(creature *ply_ptr, cmd *cmnd, int how);
+extern int set_attribute(creature *ply_ptr, int attribute, int value);
+extern int check_attribute_tier(creature *ply_ptr, int attribute);
+extern int setup_skill_file(creature *ply_ptr);
+extern int setup_objective_file(creature *ply_ptr);
+
+
 /*smithyutility.c*/
+extern int multi_objective_monster (creature *crt_ptr);
+extern int multi_objective_monster_upper (creature *crt_ptr);
+extern int multi_objective_monster_lower (creature *crt_ptr);
+extern int multi_objective_monster_target (creature *crt_ptr);
+extern int objective_monster_checker(creature *ply_ptr, creature *crt_ptr);
+extern int multi_objective_monster_checker(creature *ply_ptr, creature *crt_ptr);
+extern int multi_objective_item (object *obj_ptr);
+extern int multi_objective_item_upper (object *obj_ptr);
+extern int multi_objective_item_lower (object *obj_ptr);
+extern int multi_objective_item_target (object *obj_ptr);
+extern int objective_item_checker(creature *ply_ptr, object *obj_ptr);
+extern int multi_objective_item_checker(creature *ply_ptr, object *obj_ptr);
+extern int pre_multi_objective_checker(creature *ply_ptr, int lowbound, int highbound, int number);
+extern int objective_exit_checker(creature *ply_ptr, exit_ *ext);
+extern int multi_objective_exit_checker(creature *ply_ptr, exit_ *ext);
+extern int objective_exp(int objective);
+extern int multi_objective_check(creature *ply_ptr, int number);
+extern int multi_objective_exit (exit_ *xt);
+extern int multi_objective_exit_upper (exit_ *xt);
+extern int multi_objective_exit_lower (exit_ *xt);
+extern int multi_objective_exit_target (exit_ *xt);
+extern int objective_item_pickup(creature *ply_ptr, object *obj_ptr);
+extern int multi_objective_item_pickup(creature *ply_ptr, object *obj_ptr);
+extern char *objective_exit_message(exit_ *xt);
+extern int objective_exit(exit_ *xt);
 extern int identify(creature *ply_ptr, cmd *cmnd, int how );
 extern int objectives(creature *ply_ptr, cmd *cmnd);
 extern void damage_outputter(creature *ply_ptr, int amount, int damage_type );
+extern int skill_check(creature *ply_ptr, int skill);
+extern int set_skill(creature *ply_ptr, int skill);
+extern int skilltree(int fd, int param, char *step);
+extern int init_skilltree(creature *ply_ptr, cmd *cmnd);
+extern int can_learn_skill(creature *ply_ptr, int skill);
+extern int get_skill_level(creature *ply_ptr, int skill);
+extern int check_skill_points(creature *ply_ptr);
+extern int up_skill(creature *ply_ptr, int skill);
+extern int init_statup(creature*ply_ptr, cmd *cmnd);
+extern int statup(int fd, int param, char *str);
+extern int check_stat_points(creature*ply_ptr);
+extern int spend_statpoints(creature *ply_ptr, int num);
+extern int add_statpoints(creature *ply_ptr, int num);
+extern int add_skillpoints(creature *ply_ptr, int num);
+extern int multi_objective(creature *ply_ptr, int lowbound, int highbound, int number);
+extern int silent_objective(creature *ply_ptr, int objective);
+extern char *get_tier_string(int tier);
+extern int get_cast_speed(creature *ply_ptr);
+extern int get_HP_tick(creature *ply_ptr);
+extern int get_MP_tick(creature *ply_ptr);
+extern int get_base_AC(creature *ply_ptr);
 
 /* smithycombat.c */
 extern long compute_resistance_player(creature *ply_ptr, int damage_type);
@@ -289,6 +350,8 @@ extern long compute_resistance(creature *crt_ptr, int damage_type);
 extern short compute_DR (creature *crt_ptr);
 extern void damage_percentage_array_from_attack(creature *crt_ptr, int damage_array[13]);
 extern int damage_amounts_from_percentage_array(creature *att_ptr, creature *vic_ptr, int percentage_array[13], int amount_array[13], int damage);
+extern void damage_coloured_output (creature *ply_ptr, char *str, int damage_type);
+extern void tier_coloured_output (creature *ply_ptr, char *str, int tier);
 
 /* smithycommand1.c */
 extern int midas(creature *ply_ptr, cmd *cmnd);

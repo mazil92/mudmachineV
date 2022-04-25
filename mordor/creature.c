@@ -89,7 +89,10 @@ creature *find_crt( creature *ply_ptr, ctag *first_ct, char *str, int val )
         }
         if(EQUAL(cp->crt, str) &&
            (F_ISSET(ply_ptr, PDINVI) ?
-           1:!F_ISSET(cp->crt, MINVIS))) {
+           1:!F_ISSET(cp->crt, MINVIS))
+           && (multi_objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MMULTIOBJSEE))) 
+           && (objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MOBJECTIVESEE)))
+            ) {
             match++;
             if(match == val) {
                 found = 1;
@@ -144,7 +147,10 @@ creature *find_exact_crt( creature *ply_ptr, ctag *first_ct, char *str, int val 
 		}
 		if ( !strcmp(cp->crt->name, str ) &&
            (F_ISSET(ply_ptr, PDINVI) ?
-           1:!F_ISSET(cp->crt, MINVIS))) {
+           1:!F_ISSET(cp->crt, MINVIS))
+           && (multi_objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MMULTIOBJSEE))) 
+           && (objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MOBJECTIVESEE)))
+            ) {
             match++;
             if(match == val) {
                 found = 1;
@@ -222,7 +228,10 @@ creature *find_crt_in_rom( creature *ply_ptr, room *rom_ptr, const char *str, in
         }
         if(EQUAL(cp->crt, szTemp) &&
            (F_ISSET(ply_ptr, PDINVI) ?
-           1:!F_ISSET(cp->crt, MINVIS))) {
+           1:!F_ISSET(cp->crt, MINVIS))
+           && (multi_objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MMULTIOBJSEE))) 
+           && (objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MOBJECTIVESEE)))
+            ) {
             match++;
             if(match == val) {
                 found = 1;
@@ -257,12 +266,13 @@ creature *find_crt_in_rom( creature *ply_ptr, room *rom_ptr, const char *str, in
 			}
 			if(EQUAL(cp->crt, szTemp) &&
 			   (F_ISSET(ply_ptr, PDINVI) ?
-			   1:!F_ISSET(cp->crt, MINVIS))) {
-				match++;
-				if(match == val) {
+               1:!F_ISSET(cp->crt, MINVIS))
+               && (multi_objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MMULTIOBJSEE))) 
+               && (objective_monster_checker(ply_ptr, cp->crt) || (!F_ISSET(cp->crt, MOBJECTIVESEE)))
+                ) {
 					found = 1;
 					break;
-				}
+				
 			}
 			cp = cp->next_tag;
 		}
@@ -521,6 +531,20 @@ void die(creature *crt_ptr, creature *att_ptr )
 			"You gained %d experience for the death of %%m.\n",
 			expdiv);
 		mprint(ply_ptr->fd, g_buffer, m1arg(crt_ptr) );
+
+                //23.04.2022 Smithy Additions
+                if (F_ISSET(crt_ptr, MDEATHOBJECTIVE)){
+                    if (!objective_check(ply_ptr, crt_ptr->misc_stats[2])){
+                        set_objective(ply_ptr, crt_ptr->misc_stats[2]);
+                    }
+                }
+                if (F_ISSET(crt_ptr, MDEATHMULTIOBJ)){
+                    if (!objective_check(ply_ptr, crt_ptr->misc_stats[2])){
+                        multi_objective(ply_ptr, crt_ptr->misc_stats[0], crt_ptr->misc_stats[1], crt_ptr->misc_stats[2]);
+                    }
+                    
+                }
+                //end smithy additions
 
                 ply_ptr->experience += expdiv;
                 ply_ptr->alignment -= crt_ptr->alignment/5;

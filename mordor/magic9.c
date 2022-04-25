@@ -163,10 +163,11 @@ int recharge_wand(creature *ply_ptr, cmd *cmnd )
 	int	fd, how=CAST, cost;
 
 	fd=ply_ptr->fd;
-	if(ply_ptr->class < BUILDER && ply_ptr->class != ALCHEMIST) {
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skillsif(ply_ptr->class < BUILDER && ply_ptr->class != ALCHEMIST) {
 		output(fd, "Only an alchemist can do that.\n");
 		return(0);
-	}
+	}*/
 
 	if(ply_ptr->level < 6 && ply_ptr->class < BUILDER) {
 		output(fd, "You are not experienced enough to do that yet.\n");
@@ -248,10 +249,11 @@ int tmp_enchant(creature *ply_ptr, cmd *cmnd )
  
 	fd=ply_ptr->fd;
 
-	if(ply_ptr->class != ALCHEMIST && ply_ptr->class < BUILDER) {
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skillsif(ply_ptr->class != ALCHEMIST && ply_ptr->class < BUILDER) {
 		output(fd, "Only alchemists can do that.\n");
 		return(0);
-	}
+	}*/
 	if(ply_ptr->level < 10 && ply_ptr->class < BUILDER) {
 		output(fd, "You are not experienced enough to do that.\n");
 		return(0);

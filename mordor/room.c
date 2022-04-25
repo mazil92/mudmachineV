@@ -7,6 +7,11 @@
  *
  * $Id: room.c,v 6.21 2001/07/25 02:55:04 develop Exp $
  *
+13/04/2022 updates by smithy
+objective selective exits. you must have completed a 
+particular quest line in order to see or move through 
+these exits
+
  * $Log: room.c,v $
  * Revision 6.21  2001/07/25 02:55:04  develop
  * fixes for pkills dropping items and gold
@@ -745,10 +750,15 @@ void display_rom(creature *ply_ptr, room *rom_ptr )
 
 		xp = rom_ptr->first_ext;
 		while(xp) {
-			if(ct || (!F_ISSET(xp->ext, XSECRT) 
-				&& !F_ISSET(xp->ext, XNOSEE) 
-				&& (F_ISSET(ply_ptr, PDINVI) ? 1:!F_ISSET(xp->ext, XINVIS)))) 
-			{
+			
+			if(ct 
+				|| (!F_ISSET(xp->ext, XSECRT) 
+					&& !F_ISSET(xp->ext, XNOSEE) 
+					&& (F_ISSET(ply_ptr, PDINVI) ? 1:!F_ISSET(xp->ext, XINVIS))
+					&& ((!F_ISSET(xp->ext, XOBJECTIVESEE)) || (F_ISSET(xp->ext, XOBJECTIVESEE) && objective_check(ply_ptr, objective_exit(xp->ext))))  
+					&& (multi_objective_exit_checker(ply_ptr, xp->ext) || (!F_ISSET(xp->ext, XMULTIOBJSEE)))
+					)
+				){
 				strcat(str, xp->ext->name);
 
 				if ( ct )
@@ -764,6 +774,48 @@ void display_rom(creature *ply_ptr, room *rom_ptr )
 					if ( F_ISSET(xp->ext, XINVIS) )
 					{
 						strcat( str, " (*)" );
+					}
+					char tempstr[20];
+					if ( F_ISSET(xp->ext, XOBJECTIVESEE) )
+					{
+						
+						sprintf(tempstr, " (o%i)", objective_exit(xp->ext));
+						strcat( str, tempstr );
+					}
+					if ( F_ISSET(xp->ext, XOBJECTIVEGO) )
+					{
+						sprintf(tempstr, " (j%i)", objective_exit(xp->ext));
+						strcat( str, tempstr);
+					}
+					if ( F_ISSET(xp->ext, XMULTIOBJSEE) )
+					{
+						sprintf(tempstr, " (mo%i", multi_objective_exit(xp->ext));
+						strcat( str, tempstr );
+						if (F_ISSET(xp->ext, XMULTIOBJBELOW)){
+							sprintf(tempstr, "B");
+							strcat( str, tempstr );
+						}
+						else if (F_ISSET(xp->ext, XMULTIOBJABOVE)){
+							sprintf(tempstr, "A");
+							strcat( str, tempstr );
+						}
+						sprintf(tempstr, "%i)", multi_objective_exit_target(xp->ext));
+						strcat( str, tempstr );
+					}
+					if ( F_ISSET(xp->ext, XMULTIOBJGO) )
+					{
+						sprintf(tempstr, " (mj%i", multi_objective_exit(xp->ext));
+						strcat( str, tempstr );
+						if (F_ISSET(xp->ext, XMULTIOBJBELOW)){
+							sprintf(tempstr, "B");
+							strcat( str, tempstr );
+						}
+						else if (F_ISSET(xp->ext, XMULTIOBJABOVE)){
+							sprintf(tempstr, "A");
+							strcat( str, tempstr );
+						}
+						sprintf(tempstr, "%i)", multi_objective_exit_target(xp->ext));
+						strcat( str, tempstr );
 					}
 				}
 
@@ -829,15 +881,19 @@ void display_rom(creature *ply_ptr, room *rom_ptr )
 	cp = rom_ptr->first_mon; n=0; str[0]=0;
 	strcat(str, "You see ");
 	while(cp) {
-		if(ct || ((F_ISSET(ply_ptr, PDINVI) ? 1:!F_ISSET(cp->crt, MINVIS)) &&
-		   !F_ISSET(cp->crt, MHIDDN))) 
-		{
+		if(ct || ((F_ISSET(ply_ptr, PDINVI) ? 1:!F_ISSET(cp->crt, MINVIS)) 
+			&& !F_ISSET(cp->crt, MHIDDN)
+			&& (objective_monster_checker(ply_ptr, cp->crt) || !F_ISSET(cp->crt, MOBJECTIVESEE))
+		   	&& (multi_objective_monster_checker(ply_ptr, cp->crt) || !F_ISSET(cp->crt, MMULTIOBJSEE))
+		   	)){
 			m=1;
 			while(cp->next_tag) {
 				if(!strcmp(cp->next_tag->crt->name, cp->crt->name) &&
 				   ((ct || (F_ISSET(ply_ptr, PDINVI) ? 
-				   1:!F_ISSET(cp->next_tag->crt, MINVIS))) &&
-				   !F_ISSET(cp->next_tag->crt, MHIDDN))) {
+				   1:!F_ISSET(cp->next_tag->crt, MINVIS))
+				   && (objective_monster_checker(ply_ptr, cp->next_tag->crt) ? 1:!F_ISSET(cp->next_tag->crt, MOBJECTIVESEE))
+		   		   && (multi_objective_monster_checker(ply_ptr, cp->next_tag->crt) ? 1:!F_ISSET(cp->next_tag->crt, MMULTIOBJSEE))) 
+		   		   && !F_ISSET(cp->next_tag->crt, MHIDDN))) {
 					m++;
 					cp = cp->next_tag;
 				}
@@ -856,6 +912,28 @@ void display_rom(creature *ply_ptr, room *rom_ptr )
 				if ( F_ISSET(cp->crt, MINVIS) )
 				{
 					strcat( str, " (*)");
+				}
+				char tempystr[20];
+				if ( F_ISSET(cp->crt, MOBJECTIVESEE) )
+				{
+					
+					sprintf( tempystr, " (O%i)", multi_objective_monster_target(cp->crt) );
+					strcat(str, tempystr);
+				}
+				if ( F_ISSET(cp->crt, MMULTIOBJSEE) )
+				{	
+					sprintf(tempystr, " (MO%i", multi_objective_monster(cp->crt));
+					strcat( str, tempystr );
+					if (F_ISSET(cp->crt, MMULTIOBJBELOW)){
+						sprintf(tempystr, "B");
+						strcat( str, tempystr );
+					}
+					else if (F_ISSET(cp->crt, MMULTIOBJABOVE)){
+						sprintf(tempystr, "A");
+						strcat( str, tempystr );
+					}
+					sprintf(tempystr, "%i)", multi_objective_monster_target(cp->crt));
+					strcat( str, tempystr );
 				}
 			}
 
@@ -910,9 +988,14 @@ exit_ *find_ext(creature *ply_ptr, xtag *first_xt, char *str, int val )
 	xp = first_xt;
 	while(xp) {
 		if(!strncmp(xp->ext->name, str, strlen(str)) &&
-		  (!F_ISSET(xp->ext, XNOSEE)) &&
-		   (F_ISSET(ply_ptr, PDINVI) ? 1:!F_ISSET(xp->ext, XINVIS)))
+		  ((!F_ISSET(xp->ext, XNOSEE)) &&
+		   (F_ISSET(ply_ptr, PDINVI) ? 1:!F_ISSET(xp->ext, XINVIS)) &&
+		   (objective_check(ply_ptr, objective_exit(xp->ext)) ? 1:!F_ISSET(xp->ext, XOBJECTIVESEE)) &&
+		   (multi_objective_exit_checker(ply_ptr, xp->ext) ? 1:!F_ISSET(xp->ext, XMULTIOBJSEE))
+		   ) /*|| (!ply_ptr->class < BUILDER)*/){
+			
 			match++;
+		}
 		if(match == val) {
 			found = 1;
 			break;

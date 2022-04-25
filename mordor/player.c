@@ -1283,8 +1283,8 @@ void up_level( creature	*ply_ptr )
 
 	ply_ptr->level++;
 	if(ply_ptr->level == 1) {
-		ply_ptr->hpmax += class_stats[(int)ply_ptr->class].hpstart;
-		ply_ptr->mpmax += class_stats[(int)ply_ptr->class].mpstart;
+		ply_ptr->hpmax += class_stats[check_attribute_tier(ply_ptr, 0)+1].hpstart;
+		ply_ptr->mpmax += class_stats[check_attribute_tier(ply_ptr, 1)+1].mpstart;
 
 /*
 
@@ -1306,17 +1306,20 @@ level.  Below 7, take one point away per level.
 		ply_ptr->pdice = class_stats[(int)ply_ptr->class].pdice;
 	}
 	else {
-	        ply_ptr->hpmax += class_stats[(int)ply_ptr->class].hp;
-        	ply_ptr->mpmax += class_stats[(int)ply_ptr->class].mp;
+	        ply_ptr->hpmax += class_stats[check_attribute_tier(ply_ptr, 0)+1].hp;
+        	ply_ptr->mpmax += class_stats[check_attribute_tier(ply_ptr, 1)+1].mp;
 
 		index = (ply_ptr->level-2) % 10;
-		switch(level_cycle[(int)ply_ptr->class][index]) {
+		//smithy adds a stat point
+		add_statpoints(ply_ptr, 1);
+		add_skillpoints(ply_ptr, +1);
+		/*switch(level_cycle[(int)ply_ptr->class][index]) {
 		case STR: ply_ptr->strength++; break;
 		case DEX: ply_ptr->dexterity++; break;
 		case CON: ply_ptr->constitution++; break;
 		case INTELLIGENCE: ply_ptr->intelligence++; break;
 		case PTY: ply_ptr->piety++; break;
-		}
+		}*/
 
 /*
 
@@ -1365,8 +1368,8 @@ void down_level( creature *ply_ptr )
 
 	ply_ptr->level--;
 
-	ply_ptr->hpmax -= class_stats[(int)ply_ptr->class].hp;
-        ply_ptr->mpmax -= class_stats[(int)ply_ptr->class].mp;
+	ply_ptr->hpmax -= class_stats[check_attribute_tier(ply_ptr, 0)+1].hp;
+        ply_ptr->mpmax -= class_stats[check_attribute_tier(ply_ptr, 1)+1].mp;
 
 	ply_ptr->hpcur = ply_ptr->hpmax;
 	ply_ptr->mpcur = ply_ptr->mpmax;
@@ -1385,13 +1388,16 @@ level.  Below 7, take one point away per level.
 		}
 
 	index = (ply_ptr->level-1) % 10;
-	switch(level_cycle[(int)ply_ptr->class][index]) {
+	//smithy takes away a stat point
+	add_statpoints(ply_ptr, -1);
+	add_skillpoints(ply_ptr, -1);
+	/*switch(level_cycle[(int)ply_ptr->class][index]) {
 	case STR: ply_ptr->strength--; break;
 	case DEX: ply_ptr->dexterity--; break;
 	case CON: ply_ptr->constitution--; break;
 	case INTELLIGENCE: ply_ptr->intelligence--; break;
 	case PTY: ply_ptr->piety--; break;
-	}
+	}*/
 
 	if(F_ISSET(ply_ptr, PBESRK))
 		ply_ptr->hpmax--;
@@ -1505,7 +1511,14 @@ void compute_ac(creature *ply_ptr )
 {
 	int	ac, i;
 
-	ac = 100;
+	//compute base AC based on tier
+	if (ply_ptr->type == PLAYER){
+		ac = get_base_AC(ply_ptr);
+	}
+	else{
+		ac = 100;
+		ac -= 5*bonus[(int)ply_ptr->dexterity];
+	}
 
 	/*check that the worn item grants its armor value towards AC
 	Default is AC if neither the AC nor DR flag is declared*/
@@ -1513,7 +1526,8 @@ void compute_ac(creature *ply_ptr )
 		if(ply_ptr->ready[i] && ((F_ISSET(ply_ptr->ready[i], OGIVESAC) )|| (!F_ISSET(ply_ptr->ready[i], OGIVESAC) && !F_ISSET(ply_ptr->ready[i], OGIVESDR))))
 			ac -= ply_ptr->ready[i]->armor;
 
-	ac -= 5*bonus[(int)ply_ptr->dexterity];
+	//this is now checked in base AC calcs
+	//ac -= 5*bonus[(int)ply_ptr->dexterity];
 
 	if(ply_ptr->class == MONK) {
 		/* cap monks at certain ac value */
@@ -1543,9 +1557,15 @@ void compute_thaco( creature *ply_ptr )
 {
 	int	thaco, n;
 
+	//12/04/2022 Love smithy, gotta
+	//add the tier data instead of classes
+
+	int tier;
+	tier = check_attribute_tier(ply_ptr, 2);
+
 	n = ply_ptr->level > 20 ? 19:ply_ptr->level-1;
 
-	thaco = thaco_list[(int)ply_ptr->class][n];
+	thaco = thaco_list[tier][n];
 	if(ply_ptr->ready[WIELD-1])
 		thaco -= ply_ptr->ready[WIELD-1]->adjustment;
 	thaco -= mod_profic(ply_ptr);
@@ -1567,21 +1587,33 @@ void compute_thaco( creature *ply_ptr )
 int mod_profic( creature *ply_ptr )
 {
 	int	amt;
-	switch(ply_ptr->class) {
-		case FIGHTER:
-		case BARBARIAN:
+	
+	//smithy modded to be tier based
+
+	int tier;
+	tier = check_attribute_tier(ply_ptr, 3);
+
+	switch(tier) {
+		
+		case 0:
+			amt = 15;
+			break;
+		case 1:
 			amt = 20;
 			break;
-		case RANGER:
-		case PALADIN:
+		case 2:
 			amt = 25;
 			break;
-		case THIEF:
-		case ASSASSIN:
-		case MONK:
-		case CLERIC:
+		case 3:
 			amt = 30;
 			break;
+	  	case 4:
+			amt = 35;
+			break;
+		case 5:
+			amt = 40;
+			break;
+		
 		default:
 			amt = 40;
 			break;
@@ -1654,69 +1686,83 @@ int profic( creature *ply_ptr, int index )
 {
 	long	prof_array[12];
 	int	i, n, prof;
-
-	switch (ply_ptr->class){
-	case FIGHTER:
-		prof_array[0] = 0L;			prof_array[1] = 768L;
-		prof_array[2] = 1024L;		prof_array[3] = 1440L;
-		prof_array[4] = 1910L;		prof_array[5] = 16000L;
-		prof_array[6] = 31214L;		prof_array[7] = 167000L;
-		prof_array[8] = 268488L;	prof_array[9] = 695000L;
-		prof_array[10] = 934808L;
+	int tier;
+	//this needs to be edited so you can 
+	//use your tiered data rather than
+	//base it off the classes
+	tier = check_attribute_tier(ply_ptr, 3);
+	switch (tier){
+	case 0:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 16000L;
+		prof_array[6] = 32000L;		prof_array[7] = 64000L;
+		prof_array[8] = 125000L;	prof_array[9] = 250000L;
+		prof_array[10] = 500000L;
 		prof_array[11] = 500000000L;
 		break;
 
-	case BARBARIAN: 
-	case PALADIN: 
-	case RANGER:
-	case MONK:
-	case DM:
-	case CARETAKER:
-		prof_array[0] = 0L;			prof_array[1] = 768L;
-		prof_array[2] = 1024L;		prof_array[3] = 1800L;
-		prof_array[4] = 2388L;		prof_array[5] = 20000L;
-		prof_array[6] = 37768L;		prof_array[7] = 205000L;
-		prof_array[8] = 325610L;	prof_array[9] = 895000L;
-		prof_array[10] = 1549760L;
+	
+	case 1:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 64000L;		prof_array[7] = 125000L;
+		prof_array[8] = 250000L;	prof_array[9] = 500000L;
+		prof_array[10] = 1000000L;
 		prof_array[11] = 500000000L;
 		break;
 
-	case BARD:
-	case THIEF:
-	case ASSASSIN:
-	case BUILDER:
-		prof_array[0] = 0L;			prof_array[1] = 768L;
-		prof_array[2] = 1024L;		prof_array[3] = 1800L;
-		prof_array[4] = 2388L;		prof_array[5] = 20000L;
-		prof_array[6] = 42768L;		prof_array[7] = 220000L;
-		prof_array[8] = 355610L;	prof_array[9] = 950000L;
-		prof_array[10] = 1949760L;
+	
+	case 2:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 250000L;
+		prof_array[8] = 500000L;	prof_array[9] = 1000000L;
+		prof_array[10] = 2000000L;
 		prof_array[11] = 500000000L;
 		break;
 
-	case ALCHEMIST:
-	case DRUID:
-	case CLERIC:
-		prof_array[0] = 0L;         prof_array[1] = 768L;
-        prof_array[2] = 1024L;      prof_array[3] = 1800L;
-        prof_array[4] = 2388L;      prof_array[5] = 22000L;
-        prof_array[6] = 47768L;     prof_array[7] = 215000L;
-        prof_array[8] = 370610L;    prof_array[9] = 975000L;
-        prof_array[10] = 2044760L;
-        prof_array[11] = 500000000L;
-        break;
+	
+	case 3:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 1000000L;	prof_array[9] = 2000000L;
+		prof_array[10] = 4000000L;
+		prof_array[11] = 500000000L;
+		break;
 
-	case MAGE:
-		prof_array[0] = 0L;			prof_array[1] = 768L;
-		prof_array[2] = 1024L;		prof_array[3] = 1800L;
-		prof_array[4] = 2388L;		prof_array[5] = 25000L;
-		prof_array[6] = 50768L;		prof_array[7] = 215000L;
-		prof_array[8] = 385610L;	prof_array[9] = 1005000L;
-		prof_array[10] = 2344760L;
+	case 4:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 2000000L;	prof_array[9] = 4000000L;
+		prof_array[10] = 8000000L;
+		prof_array[11] = 500000000L;
+		break;
+	case 5:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 2000000L;	prof_array[9] = 8000000L;
+		prof_array[10] = 16000000L;
 		prof_array[11] = 500000000L;
 		break;
 	default:
-		return 0;
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 2000000L;	prof_array[9] = 8000000L;
+		prof_array[10] = 16000000L;
+		prof_array[11] = 500000000L;
+		break;
+		//return 0;
 	}
 		
 	n = ply_ptr->proficiency[index];
@@ -1741,46 +1787,85 @@ int mprofic( creature *ply_ptr, int	index )
 {
 	long	prof_array[12];
 	int	i, n, prof;
+	int tier;
+	//this needs to be edited so you can 
+	//use your tiered data rather than
+	//base it off the classes
+	tier = check_attribute_tier(ply_ptr, 9);
 
-        switch(ply_ptr->class){
-        case MAGE:
-		case ALCHEMIST:
-			prof_array[0] = 0L;        prof_array[1] = 1024L;
-            prof_array[2] = 2048L;     prof_array[3] = 4096L;
-            prof_array[4] = 8192L;     prof_array[5] = 16384L;
-            prof_array[6] = 35768L;    prof_array[7] = 85536L;
-            prof_array[8] = 140000L;   prof_array[9] = 459410L;
-            prof_array[10] = 2073306L; prof_array[11] = 500000000L;
-            break;
-        case CLERIC:
-		case DRUID:
-		case BARD:
-			prof_array[0] = 0L;        prof_array[1] = 1024L;
-			prof_array[2] = 4092L;     prof_array[3] = 8192L;
-		    prof_array[4] = 16384L;    prof_array[5] = 32768L;
-	        prof_array[6] = 70536L;    prof_array[7] = 119000L;
-			prof_array[8] = 226410L;   prof_array[9] = 709410L;
-		    prof_array[10] = 2973307L; prof_array[11] = 500000000L;
-	        break;
-        case PALADIN:
-        case MONK:
-		case RANGER:    
-            prof_array[0] = 0L;        prof_array[1] = 1024L;
-            prof_array[2] = 8192L;     prof_array[3] = 16384L;
-            prof_array[4] = 32768L;    prof_array[5] = 65536L;
-            prof_array[6] = 105000L;   prof_array[7] = 165410L;
-            prof_array[8] = 287306L;   prof_array[9] = 809410L;
-            prof_array[10] = 3538232L; prof_array[11] = 500000000L;
-            break;  
-        default:
-			prof_array[0] = 0L;       prof_array[1] = 1024L;
-            prof_array[2] = 40000L;   prof_array[3] = 80000L;
-            prof_array[4] = 120000L;  prof_array[5] = 160000L;
-            prof_array[6] = 205000L;  prof_array[7] = 222000L;
-            prof_array[8] = 380000L;  prof_array[9] = 965410L;
-            prof_array[10] = 5495000; prof_array[11] = 500000000L;
-            break;
-        } 
+    switch (tier){
+	case 0:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 16000L;
+		prof_array[6] = 32000L;		prof_array[7] = 64000L;
+		prof_array[8] = 125000L;	prof_array[9] = 250000L;
+		prof_array[10] = 500000L;
+		prof_array[11] = 500000000L;
+		break;
+
+	
+	case 1:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 64000L;		prof_array[7] = 125000L;
+		prof_array[8] = 250000L;	prof_array[9] = 500000L;
+		prof_array[10] = 1000000L;
+		prof_array[11] = 500000000L;
+		break;
+
+	
+	case 2:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 250000L;
+		prof_array[8] = 500000L;	prof_array[9] = 1000000L;
+		prof_array[10] = 2000000L;
+		prof_array[11] = 500000000L;
+		break;
+
+	
+	case 3:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 1000000L;	prof_array[9] = 2000000L;
+		prof_array[10] = 4000000L;
+		prof_array[11] = 500000000L;
+		break;
+
+	case 4:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 2000000L;	prof_array[9] = 4000000L;
+		prof_array[10] = 8000000L;
+		prof_array[11] = 500000000L;
+		break;
+	case 5:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 2000000L;	prof_array[9] = 8000000L;
+		prof_array[10] = 16000000L;
+		prof_array[11] = 500000000L;
+		break;
+	default:
+		prof_array[0] = 0L;			prof_array[1] = 1000L;
+		prof_array[2] = 2000L;		prof_array[3] = 4000L;
+		prof_array[4] = 8000L;		prof_array[5] = 32000L;
+		prof_array[6] = 125000L;	prof_array[7] = 500000L;
+		prof_array[8] = 2000000L;	prof_array[9] = 8000000L;
+		prof_array[10] = 16000000L;
+		prof_array[11] = 500000000L;
+		break;
+		//return 0;
+	} 
 
 	n = ply_ptr->realm[index-1];
 	for(i=0; i<11; i++)

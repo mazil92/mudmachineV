@@ -251,7 +251,17 @@ int sneak( creature *ply_ptr, cmd *cmnd)
 			output(fd, "That room is full.\n");
 			return(0);
 		}
+
+        //13/04/2022
+        //extra exit conditions by smithy
+        if (F_ISSET(ext_ptr, XOBJECTIVEGO) && !objective_check(ply_ptr, objective_exit(ext_ptr))){
+            output(fd, objective_exit_message(ext_ptr));
+            output(fd, "\n");
+            return(0);
+        }
 	}
+
+    
 
     if(!F_ISSET(ply_ptr, PHIDDN)) {
         if(strcmp(ext_ptr->name, "up") && strcmp(ext_ptr->name, "down") 

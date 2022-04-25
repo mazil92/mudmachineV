@@ -1754,14 +1754,20 @@ void heal_crt( creature * crt_ptr )
                }
 
 
-                crt_ptr->hpcur += MAX(1, 3 + bonus[(int)crt_ptr->constitution] +
+
+        //new smithy code
+        if (crt_ptr->type == PLAYER){
+            crt_ptr->hpcur += get_HP_tick(crt_ptr);
+            crt_ptr->mpcur += get_MP_tick(crt_ptr);
+        }
+        else{
+               crt_ptr->hpcur += MAX(1, 3 + bonus[(int)crt_ptr->constitution] +
                               (crt_ptr->class == BARBARIAN ? (3 * bonus[(int)crt_ptr->constitution]):0));
-
-		crt_ptr->mpcur += MAX(1, 2+(crt_ptr->intelligence > 17 ? 1:0)+
-				((crt_ptr->class == MAGE || crt_ptr->class == ALCHEMIST) ? 2:0));
-
+		      crt_ptr->mpcur += MAX(1, 2+(crt_ptr->intelligence > 17 ? 1:0));
+        }
+        
 		crt_ptr->lasttime[LT_HEALS].ltime = t;
-		crt_ptr->lasttime[LT_HEALS].interval = 45 - 5*bonus[(int)crt_ptr->piety];
+		crt_ptr->lasttime[LT_HEALS].interval = 45 - crt_ptr->piety;
 
 		/* handle quick healing */
 		if(F_ISSET(crt_ptr->parent_rom, RHEALR)) 

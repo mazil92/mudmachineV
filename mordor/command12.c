@@ -103,10 +103,11 @@ int bard_song2( creature *ply_ptr, cmd *cmnd )
 
     fd = ply_ptr->fd;
 	
-	if(ply_ptr->class != BARD && ply_ptr->class < BUILDER) {
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skillsif(ply_ptr->class != BARD && ply_ptr->class < BUILDER) {
 		output(fd, "Only bards have that skill.\n");
 		return(0);
-	}
+	}*/
     	
 	if(F_ISSET(ply_ptr, PSILNC)) {
         output_wc(fd, "A spell has taken your voice and you cannot sing.\n", SILENCECOLOR);
@@ -208,10 +209,12 @@ int meditate( creature	*ply_ptr, cmd *cmnd )
 
 	fd = ply_ptr->fd;
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != MONK && ply_ptr->class < BUILDER){
 		output(fd, "Only monks may meditate.\n");
 		return(0);
-	}
+	}*/
 
 	i = LT(ply_ptr, LT_MEDIT );
     	t = time(0);
@@ -275,10 +278,12 @@ int touch_of_death( creature *ply_ptr, cmd *cmnd )
 		return(0);
 	}
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != MONK && ply_ptr->class < BUILDER) {
 		output(fd, "Only monks may use that skill.\n");
 		return(0);
-	}
+	}*/
 	if(ply_ptr->level < 10) {
 		output(fd, "You are not experienced enough to do that.\n");
 		return(0);

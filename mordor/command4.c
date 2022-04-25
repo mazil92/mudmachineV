@@ -9,6 +9,9 @@
  * $Id: command4.c,v 6.21 2021/09/25 03:00:00 develop tnl, hp, mp $
  *
  * $Log: command4.c,v $
+13/04/2021
+smithy complete overhaul of INFO page
+
 
 10/01/2021
 added DR stuff to info page
@@ -274,16 +277,107 @@ int info( creature *ply_ptr, cmd *cmnd )
 	char	alstr[8];
 	int 	fd, cnt;
 	long	expneeded, lv;
+	int tier;
 
 	fd = ply_ptr->fd;
-/*
-	update_ply(ply_ptr); */
-
 	if(ply_ptr->level < MAXALVL)
 		expneeded = needed_exp[ply_ptr->level -1];
 	else
 		expneeded = (long)((needed_exp[MAXALVL-1]*ply_ptr->level));   
+	for(lv=0,cnt=0; lv<MAXWEAR; lv++)
+		if(ply_ptr->ready[lv]) 
+			cnt++;
+	cnt += count_inv(ply_ptr, 0);
+/*
+	update_ply(ply_ptr); */
 
+	ANSI(fd, AM_BOLD); ANSI(fd, AFC_YELLOW); output(fd, "              ======== ");output(fd, ply_ptr->name); output(fd, ", the "); output(fd, title_ply(ply_ptr)); output(fd," ========\n");
+	ANSI(fd, AM_NORMAL); ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, "------------------------------------------------------------------------------\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| %-10s %15s", get_race_string(ply_ptr->race), get_class_string(ply_ptr->class)); output(fd, g_buffer);
+	
+	#define INTERVAL ply_ptr->lasttime[LT_HOURS].interval
+
+	output(fd, "         Playtime:");
+	if(INTERVAL > 86400L)
+	{
+		sprintf(g_buffer, " %3d ", (int)(INTERVAL/86400L));
+		output(fd, g_buffer);
+	}
+	else
+		output(fd, "  0 ");
+
+	output(fd, "day/s ");
+	if(INTERVAL > 3600L)
+	{
+		sprintf(g_buffer, "%2d ", (int)((INTERVAL % 86400L)/3600L));
+		output(fd, g_buffer);
+	}
+	else
+		output(fd, " 0 ");
+	output(fd, "hour/s ");
+
+	sprintf(g_buffer, "%2d ", (int)((INTERVAL % 3600L)/60L));
+	output(fd, g_buffer);
+	output(fd, "minute/s |\n");
+
+	sprintf(g_buffer, "| Level %2d with %8d Experience Points and %8d Xp to Next Lvl(TNL)  |\n", ply_ptr->level, ply_ptr->experience, MAX(0, expneeded-ply_ptr->experience)); output(fd, g_buffer);
+	sprintf(g_buffer, "| $%-11d Gold  $%-11d Banked          Inventory %-4d Lbs/%-3d Objs |\n", ply_ptr->gold, ply_ptr->bank_balance, weight_ply(ply_ptr), cnt  ); output(fd, g_buffer);
+	sprintf(g_buffer, "| Unspent stat points: %2d   Unspent skill points: %2d                          |\n", check_stat_points(ply_ptr), check_skill_points(ply_ptr)); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                                                             |\n"); output(fd, g_buffer);
+	output(fd, "| ");
+	ANSI(fd, AFC_RED); output(fd, "STR"); ANSI(fd, AFC_WHITE);
+	output(fd, "  ");
+	ANSI(fd, AFC_GREEN);output(fd, "DEX");ANSI(fd, AFC_WHITE);
+	output(fd, "  ");
+	ANSI(fd, AFC_YELLOW);output(fd, "CON");ANSI(fd, AFC_WHITE);
+	output(fd, "  ");
+	ANSI(fd, AFC_CYAN);output(fd, "INT");ANSI(fd, AFC_WHITE);
+	output(fd, "  ");
+	ANSI(fd, AFC_MAGENTA);output(fd, "PTY");ANSI(fd, AFC_WHITE);
+	output(fd, "   ");
+	ANSI(fd, AFC_CYAN);output(fd, "Armor Class(AC)");ANSI(fd, AFC_WHITE);
+	output(fd, "  ");
+	ANSI(fd, AFC_CYAN);output(fd, "Damage Reduction(DR)");ANSI(fd, AFC_WHITE);
+	output(fd, "  ");
+	ANSI(fd, AFC_CYAN);output(fd, "Confidence");ANSI(fd, AFC_WHITE);
+	output(fd, " |\n");
+	sprintf(g_buffer, "|  %2d   %2d   %2d   %2d   %2d               %2.1f                  %2.1f        %2d% |\n", ply_ptr->strength, ply_ptr->dexterity, ply_ptr->constitution, ply_ptr->intelligence, ply_ptr->piety, (double)ply_ptr->armor/10, (double)compute_DR(ply_ptr)/10, armor_confidence(ply_ptr)); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                                                             |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                          -Proficiencies and Resistances-                    |\n"); output(fd, g_buffer);
+	output(fd, "|        ");
+	damage_coloured_output(ply_ptr, "SHARP", 1);output(fd, "   ");
+	damage_coloured_output(ply_ptr, "THRUST", 2);output(fd, "  ");
+	damage_coloured_output(ply_ptr, "BLUNT", 3);output(fd,"  ");
+	damage_coloured_output(ply_ptr, "POLE", 4);output(fd,"  ");
+	damage_coloured_output(ply_ptr, "MISSILE", 5);output(fd,"  ");
+	damage_coloured_output(ply_ptr, "HAND", 6); output(fd,"  ");
+	damage_coloured_output(ply_ptr, "EARTH", 7);output(fd, "  ");
+	damage_coloured_output(ply_ptr, "WIND", 8); output(fd, "  ");
+	damage_coloured_output(ply_ptr, "FIRE", 9); output(fd, "  ");
+	damage_coloured_output(ply_ptr,	"WATER", 10); output(fd, " |\n");
+	ANSI(fd, AM_LOWINTESITY);
+	sprintf(g_buffer, "| Profic: %3d%%     %3d%%   %3d%%  %3d%%    %3d%%   %3d%%   %3d%%  %3d%%  %3d%%   %3d%% |\n",profic(ply_ptr, 0),profic(ply_ptr, 1),profic(ply_ptr, 2),profic(ply_ptr, 3),profic(ply_ptr, 4),profic(ply_ptr, 5),mprofic(ply_ptr, 1),mprofic(ply_ptr, 2),mprofic(ply_ptr, 3),mprofic(ply_ptr, 4)); output(fd, g_buffer);
+	ANSI(fd, AM_BOLD);
+	sprintf(g_buffer, "| Resist: %3d%%     %3d%%   %3d%%  %3d%%    %3d%%   %3d%%   %3d%%  %3d%%  %3d%%   %3d%% |\n",compute_resistance(ply_ptr, 1),compute_resistance(ply_ptr, 2),compute_resistance(ply_ptr, 3),compute_resistance(ply_ptr, 4),compute_resistance(ply_ptr, 5),compute_resistance(ply_ptr, 6),compute_resistance(ply_ptr, 7),compute_resistance(ply_ptr, 8),compute_resistance(ply_ptr, 9),compute_resistance(ply_ptr, 10)); output(fd, g_buffer);
+	ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "|                                                                             |\n"); output(fd, g_buffer);
+	output(fd, "|         ");
+	damage_coloured_output(ply_ptr, "LIFE", 12);output(fd,"  ");
+	damage_coloured_output(ply_ptr, "ENCHANT", 12);output(fd," ");
+	damage_coloured_output(ply_ptr, "ARCANA", 12);output(fd," ");
+	damage_coloured_output(ply_ptr, "SORCERY", 12);output(fd," ");
+	damage_coloured_output(ply_ptr, "POISON", 11);output(fd,"  ");
+	damage_coloured_output(ply_ptr, "MAGIC", 12);output(fd," ");
+	damage_coloured_output(ply_ptr, "DIVINE", 13);output(fd,"                   |\n");
+	ANSI(fd, AM_LOWINTESITY);
+	sprintf(g_buffer, "| Profic: %3d%%     %3d%%   %3d%%  %3d%%      ---    ---    ---                   |\n",mprofic(ply_ptr, 5),mprofic(ply_ptr, 6),mprofic(ply_ptr, 7),mprofic(ply_ptr, 8)); output(fd, g_buffer);
+	ANSI(fd, AM_BOLD);
+	sprintf(g_buffer, "| Resist:  ---     ---    ---    ---     %3d%%   %3d%%   %3d%%                   |\n",compute_resistance(ply_ptr, 11),compute_resistance(ply_ptr, 12),compute_resistance(ply_ptr, 13)); output(fd, g_buffer);
+	ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "------------------------------------------------------------------------------\n"); output(fd, g_buffer);
+
+	/*
 	if(ply_ptr->alignment < -100)
 		strcpy(alstr, "Evil");
 	else if(ply_ptr->alignment < 101)
@@ -291,10 +385,7 @@ int info( creature *ply_ptr, cmd *cmnd )
 	else
 		strcpy(alstr, "Good");
 
-	for(lv=0,cnt=0; lv<MAXWEAR; lv++)
-		if(ply_ptr->ready[lv]) 
-			cnt++;
-	cnt += count_inv(ply_ptr, 0);
+	
 
     output(fd, "\n\n->");
 	output(fd, "You are ");
@@ -465,7 +556,7 @@ int info( creature *ply_ptr, cmd *cmnd )
 	sprintf(g_buffer, "DIVINE: %2d%%   ",  compute_resistance_player(ply_ptr, DDIVINE));
 	output(fd, g_buffer);
 	ANSI(fd, AM_NORMAL);
-	ANSI(fd, AFC_WHITE);
+	ANSI(fd, AFC_WHITE);*/
 
 
 	
@@ -498,6 +589,204 @@ void info_2(int	fd, int param, char *instr )
 		F_CLR(ply_ptr, PREADI);
 		RETURN(fd, command, 1);
 	}
+	sprintf(g_buffer, "                            ===== Stat Tiers =====                             \n"); output(fd, g_buffer);
+	sprintf(g_buffer, "-------------------------------------------------------------------------------\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "HP Base/Growth:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, " %2d + %1d (", class_stats[check_attribute_tier(ply_ptr, 0)+1].hpstart, class_stats[check_attribute_tier(ply_ptr, 0)+1].hp); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 0))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,0));
+	sprintf(g_buffer, ")      |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "MP Base/Growth:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, " %2d + %1d (", class_stats[check_attribute_tier(ply_ptr, 1)+1].mpstart, class_stats[check_attribute_tier(ply_ptr, 1)+1].mp); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 1))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,1));
+	sprintf(g_buffer, ")     |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Values +/-1 depending on CON stat    "); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "|  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Base MP/amount gained through lvlup "); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "|\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "HP Regeneration:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, " +%2d/tick  ", get_HP_tick(ply_ptr)); output(fd, g_buffer);
+	//sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 4))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,4));
+	sprintf(g_buffer, "          |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "MP Regeneration:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, " +%2d/tick  ", get_MP_tick(ply_ptr)); output(fd, g_buffer);
+	//sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 8))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,8));
+	sprintf(g_buffer, "         |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "HP gained per tick when resting "); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "     |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "MP gained per tick when resting"); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "     |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Proficiency Gain: "); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	//sprintf(g_buffer, " %2d + %1d (", class_stats[check_attribute_tier(ply_ptr, 0)+1].hpstart, class_stats[check_attribute_tier(ply_ptr, 0)+1].hp); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 3))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,3));
+	sprintf(g_buffer, "             |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Realm Gain: "); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	//sprintf(g_buffer, " %2d + %1d (", class_stats[check_attribute_tier(ply_ptr, 1)+1].mpstart, class_stats[check_attribute_tier(ply_ptr, 1)+1].mp); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 9))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,9));
+	sprintf(g_buffer, "                  |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Speed at which you gain weapon prof%"); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "  |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Speed at which you gain spell prof%"); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "  |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "ThAC0:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	compute_thaco(ply_ptr);
+	sprintf(g_buffer, " %2d (", (int)ply_ptr->thaco); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 2))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,2));
+	sprintf(g_buffer, ")                   |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Cast Speed:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, " %1d secs/cast (", get_cast_speed(ply_ptr)); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 8))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,8));
+	sprintf(g_buffer, ")    |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Attack accuracy. Low values are best "); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "|  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Cooldown time between spell casts"); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "   |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Base AC:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	sprintf(g_buffer, " %3.1f (", (double)get_base_AC(ply_ptr)/10); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 4))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,4));
+	sprintf(g_buffer, ")                |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Healing:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	//not making a function call for this one because idk I think it's too niche
+	int heal = 0;
+	int tier;
+	tier = check_attribute_tier(ply_ptr, 7);
+	switch (tier){
+		case 0:
+			heal = 80;
+		break;
+		case 1:
+			heal = 60;
+		break;
+		case 2:
+			heal = 50;
+		break;
+		case 3:
+			heal = 40;
+		break;
+		case 4:
+			heal = 30;
+		break;
+		case 5:
+			heal = 0;
+		break;
+		default:
+			heal = 0;
+		break;
+	}
+	sprintf(g_buffer, " +%1.1f*Lvl (", (double)heal/100); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 7))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,7));
+	sprintf(g_buffer, ")          |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Base dodge chance with no armor worn"); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, " |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Number shows bonus for vigor spell "); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, " |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Base DR:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	int DR;
+	tier = check_attribute_tier(ply_ptr, 5);
+	switch (tier){
+		case 0:
+			DR = 18*ply_ptr->level;
+		break;
+		case 1:
+			DR = 16*ply_ptr->level;
+		break;
+		case 2:
+			DR = 13*ply_ptr->level;
+		break;
+		case 3:
+			DR = 10*ply_ptr->level;
+		break;
+		case 4:
+			DR = 7*ply_ptr->level;
+		break;
+		case 5:
+			DR = 5*ply_ptr->level;
+		break;
+		default:
+			DR = 5*ply_ptr->level;
+		break;
+	}
+	sprintf(g_buffer, " %3.1f (", (double)DR/10); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 5))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,5));
+	sprintf(g_buffer, ")               |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Base Resistances:"); ANSI(fd, AFC_CYAN); output(fd, g_buffer); ANSI(fd, AFC_WHITE);
+	int resists;
+	tier = check_attribute_tier(ply_ptr, 6);
+	switch (tier){
+		case 0:
+			resists = 20*ply_ptr->level;
+		break;
+		case 1:
+			resists = 15*ply_ptr->level;
+		break;
+		case 2:
+			resists = 12*ply_ptr->level;
+		break;
+		case 3:
+			resists = 9*ply_ptr->level;
+		break;
+		case 4:
+			resists = 4*ply_ptr->level;
+		break;
+		case 5:
+			resists = 1*ply_ptr->level;
+		break;
+		default:
+			resists = 1*ply_ptr->level;
+		break;
+	}
+	sprintf(g_buffer, " %3.1f% (", (double)resists/10); output(fd, g_buffer);
+	sprintf(g_buffer, "%s Tier", get_tier_string(check_attribute_tier(ply_ptr, 6))); tier_coloured_output(ply_ptr, g_buffer, check_attribute_tier(ply_ptr,6));
+	sprintf(g_buffer, ")    |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| "); output(fd, g_buffer);
+	sprintf(g_buffer, "Base damage reduction with no armor "); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, " |  "); output(fd, g_buffer);
+	sprintf(g_buffer, "Base resists with no armor worn "); ANSI(fd, AM_ITALIC);output(fd, g_buffer);ANSI(fd, AM_NORMAL);
+	sprintf(g_buffer, "    |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "-------------------------------------------------------------------------------\n"); output(fd, g_buffer);
+	
+	/*sprintf(g_buffer, "| HP Regeneration: %2d (%s Tier)       |  MP Regeneration: %2d (%s Tier)      |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| HP gained per tick when resting      |  MP gained per tick when resting     |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "| Proficiency Gain: %s Tier            |  Realm Gain: %s Tier                 |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| Speed at which you gain weapon prof% |  Speed at which you gain spell prof% |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "|            ThAC0: %2d (%s Tier)      |  Cast Speed: %1ds/cast (%s Tier)     |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| Attack accuracy. Low values are best |  Cooldown time between spell casts   |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "|          Base AC: %3.1f (%s Tier)    |  Healing: +%s*Lvl (%s Tier)          |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| Base dodge chance with no armor worn |  Number shows bonus for vigor spell  |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "|                                      |                                      |\n"); output(fd, g_buffer);
+	
+	sprintf(g_buffer, "|          Base DR: %3.1f (%s Tier)    |  Base Resistances: %2d (%s Tier)     |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "| Base damage reduction with no armor  |  Base resists with no armor worn     |\n"); output(fd, g_buffer);
+	sprintf(g_buffer, "-------------------------------------------------------------------------------\n"); output(fd, g_buffer);
+	*/
+
 
 	strcpy(str, "\nSpells known: ");
 	for(i=0,j=0; i< get_spell_list_size(); i++)
@@ -1131,10 +1420,12 @@ int track( creature *ply_ptr, cmd *cmnd )
 
 	fd = ply_ptr->fd;
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != RANGER && ply_ptr->class != DRUID && ply_ptr->class < BUILDER) {
 		output(fd, "Only rangers and druids can track.\n");
 		return(0);
-	}
+	}*/
 
 	F_CLR(ply_ptr, PHIDDN);
 
@@ -1199,11 +1490,12 @@ int peek( creature *ply_ptr, cmd *cmnd )
 		output(fd, "Peek at who?\n");
 		return(0);
 	}
-
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != THIEF && ply_ptr->class < BUILDER) {
 		output(fd, "Only thieves can peek.\n");
 		return(0);
-	}
+	}*/
 	
 	if(F_ISSET(ply_ptr, PBLIND)){
 		output_wc(fd, "You can't do that...You're blind!\n", BLINDCOLOR);

@@ -340,6 +340,8 @@ void create_ply(int	fd, int	param, char	*str )
 			ask_for(fd, "Choose one: ");
 			RETURN(fd, create_ply, 5);
 		}
+		//Smithy cludge for now
+		Ply[fd].ply->class = NEWBIE;
 
 		output(fd, "\n		 ----- CHARACTER STATS -----");
 		output(fd, "\nYou have 54 points to distribute among your 5 stats. Please enter your 5");
@@ -564,8 +566,16 @@ void create_ply(int	fd, int	param, char	*str )
 		sprintf(g_buffer, "%c%c%c\n", 255,252,1);
 		output(fd, g_buffer);
 
-		strncpy(Ply[fd].ply->password, str, 14);
+
 		strcpy(Ply[fd].ply->name, Ply[fd].extr->tempstr[0]);
+		
+		//SMITHY ADDITIONSS 11/04/2022
+		setup_skill_file(Ply[fd].ply);
+		setup_objective_file(Ply[fd].ply);
+		//END SMITHY ADDS
+
+		strncpy(Ply[fd].ply->password, str, 14);
+		
 		up_level(Ply[fd].ply);
 		Ply[fd].ply->fd = fd;
 
@@ -602,6 +612,8 @@ void create_ply(int	fd, int	param, char	*str )
 			S_SET(Ply[fd].ply, SBURNS);
 		if(Ply[fd].ply->realm[3] == 2048) 
 			S_SET(Ply[fd].ply, SBLIST);
+
+		
 
 		if(MSP) output(fd, "This world supports the Mud Sound Protocol.  Type 'set sound' to enable.\n");
 		output(fd, "Type 'welcome' at prompt to get more info on the game and help you get started.\n\n");
@@ -852,6 +864,17 @@ int process_cmd(int	fd, cmd	*cmnd )
 		output(fd, "Command is not unique.\n");
 		RETURNV(fd, command, 1, PROMPT);
 	}
+	
+	//23/04/2022 Smithy Additions here
+	//check if the command has a skill value
+	//if yes, then it check if the player has learned that skill
+	if (cmdlist[cmdno].skillno > 0){
+		if (!skill_check(Ply[fd].ply, cmdlist[cmdno].skillno)){
+			output(fd, "You don't know how to do that yet.\n");
+			RETURNV(fd, command, 1, PROMPT);
+		}
+	}
+	//end smithy additions
 
 	if(cmdlist[cmdno].cmdno < 0)
 		return(special_cmd(Ply[fd].ply, 0-cmdlist[cmdno].cmdno, cmnd));

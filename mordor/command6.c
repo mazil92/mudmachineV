@@ -423,6 +423,31 @@ int yell(creature *ply_ptr, cmd	*cmnd )
 			}
 		}
 
+		//13/04/2022
+		//extra exit conditions by smithy
+		if (!objective_exit_checker(ply_ptr, ext_ptr)){
+			if (ply_ptr->class >= CARETAKER){
+				output(fd, "Objective Exit Passed\n");
+			
+			}
+			else{
+				output(fd, objective_exit_message(ext_ptr));
+				output(fd, "\n");
+				return(0);
+			} 
+		}
+		if (!multi_objective_exit_checker(ply_ptr, ext_ptr)){
+			if (ply_ptr->class >= CARETAKER){
+				output(fd, "Objective Exit Passed\n");
+			
+			}
+			else{
+				output(fd, objective_exit_message(ext_ptr));
+				output(fd, "\n");
+				return(0);
+			} 
+		}
+
 		i = LT(ply_ptr, LT_ATTCK);
 		s = LT(ply_ptr, LT_SPELL);
 		t = time(0);
@@ -939,10 +964,11 @@ int yell(creature *ply_ptr, cmd	*cmnd )
 		fd = ply_ptr->fd;
 		rom_ptr = ply_ptr->parent_rom;
 
-		if(ply_ptr->class != THIEF && ply_ptr->class != ASSASSIN && ply_ptr->class < BUILDER) {
+		/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skillsif(ply_ptr->class != THIEF && ply_ptr->class != ASSASSIN && ply_ptr->class < BUILDER) {
 			output(fd, "Only thieves and assassins may pick locks.\n");
 			return(0);
-		}
+		}*/
 
 		if(cmnd->num < 2) {
 			output(fd, "Pick what?\n");

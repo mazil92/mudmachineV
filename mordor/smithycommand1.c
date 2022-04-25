@@ -38,10 +38,12 @@ int envenom(creature *ply_ptr, cmd *cmnd){
 	rom_ptr = ply_ptr->parent_rom;
 
 	
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != ASSASSIN && ply_ptr->class < BUILDER) {
 		output(fd, "Only assassins may use that skill.\n");
 		return(0);
-	}
+	}*/
 	if(ply_ptr->level < 13) {
 		output(fd, "Requires level 13!\n");
 		return(0);
@@ -104,10 +106,12 @@ int midas( creature *ply_ptr, cmd *cmnd )
 		return(0);
 	}
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != ALCHEMIST && ply_ptr->class < BUILDER) {
 		output(fd, "Only alchemists may use that skill.\n");
 		return(0);
-	}
+	}*/
 	if(ply_ptr->level < 13) {
 		output(fd, "Requires level 13!\n");
 		return(0);
@@ -230,10 +234,12 @@ int attune( creature *ply_ptr, cmd *cmnd ){
 	int			chance, m, dmg, fd, damage_type;
 
 	fd = ply_ptr->fd;
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != ALCHEMIST && ply_ptr->class < BUILDER) {
 		output(fd, "Only alchemists may use that skill.\n");
 		return(0);
-	}
+	}*/
 	if(ply_ptr->level < 1) {
 		output(fd, "Requires level 1!\n");
 		return(0);
@@ -287,10 +293,12 @@ int distill( creature *ply_ptr, cmd *cmnd ){
 	int			chance, m, dmg, fd, damage_type;	
 	
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != ALCHEMIST && ply_ptr->class < BUILDER) {
 		output(fd, "Only alchemists may use that skill.\n");
 		return(0);
-	}
+	}*/
 	if(ply_ptr->level < 1) {
 		output(fd, "Requires level 1!\n");
 		return(0);
@@ -324,132 +332,137 @@ fd = ply_ptr->fd;
 
 if (ply_ptr->class < BUILDER){
 	
-	switch(cmdno){
-		/*track*/
+	if (!skill_check(ply_ptr, cmdlist[cmdno].skillno)){
+		return(WRONGCLASS);
+	}
+
+
+	/*switch(cmdno){
+		//track
 		
 		case 60: 
 		if (ply_ptr->class != RANGER && ply_ptr->class != DRUID ){
 			
 			return(WRONGCLASS);
 		}
-		/*peek*/
+		//peek
 		case 61:
 		if (ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
 			return(WRONGCLASS);
 		}
-		/*pick*/
+		//pick
 		case 79:
 		if (ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
 			return(WRONGCLASS);
 		}
-		/*steal*/
+		//steal
 		case 80:
 		if (ply_ptr->class != THIEF){
 			return(WRONGCLASS);
 		}
-		/*backstab*/
+		//backstab
 		case 97:
 		if (ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
 			return(WRONGCLASS);
 		}
-		/*circle*/
+		//circle
 		case 103:
 		if (ply_ptr->class != BARBARIAN && ply_ptr->class != FIGHTER ){
 			return(WRONGCLASS);
 		}
-		/*bash*/
+		//bash
 		case 104:
 		if (ply_ptr->class != BARBARIAN && ply_ptr->class != FIGHTER ){
 			return(WRONGCLASS);
 		}
-		/*turn*/
+		//turn
 		case 118:
 		if (ply_ptr->class != PALADIN && ply_ptr->class != CLERIC ){
 			return(WRONGCLASS);
 		}
-		/*haste*/
+		//haste
 		case 120:
 		if (ply_ptr->class != RANGER ){
 			return(WRONGCLASS);
 		}
-		/*pray*/
+		//pray
 		case 121:
 		if (ply_ptr->class != PALADIN && ply_ptr->class != CLERIC ){
 			return(WRONGCLASS);
 		}
-		/*bard_song*/
+		//bard_song
 		case 100:
 		if (ply_ptr->class != BARD ){
 			return(WRONGCLASS);
 		}
-		/*bard_song2*/
+		//bard_song2
 		case 81:
 		if (ply_ptr->class != BARD ){
 			return(WRONGCLASS);
 		}
-		/*meditate*/
+		//meditate
 		case 139:
 		if (ply_ptr->class != MONK ){
 			return(WRONGCLASS);
 		}
-		/*touch_of_death*/
+		//touch_of_death
 		case 140:
 		if (ply_ptr->class != MONK){
 			return(WRONGCLASS);
 		}
-		/*transform*/
+		//transform
 		case 141:
 		if (ply_ptr->class != DRUID ){
 			return(WRONGCLASS);
 		}
-		/*rechard_wand*/
+		//rechard_wand
 		case 146:
 		if (ply_ptr->class != ALCHEMIST ){
 			return(WRONGCLASS);
 		}
-		/*scout*/
+		//scout
 		case 150:
 		if (ply_ptr->class != RANGER && ply_ptr->class != DRUID && ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF ){
 			return(WRONGCLASS);
 		}
-		/*transmute*/
+		//transmute
 		case 151:
 		if (ply_ptr->class != DRUID ){
 			return(WRONGCLASS);
 		}
-		/*enchant*/
+		//enchant
 		case 148:
 		if (ply_ptr->class != MAGE && ply_ptr->class != ALCHEMIST ){
 			return(WRONGCLASS);
 		}
-		/*berserk*/
+		//berserk
 		case 152:
 		if (ply_ptr->class != BARBARIAN ){
 			return(WRONGCLASS);
 		}
-		/*barkskin*/
+		//barkskin
 		case 154:
 		if (ply_ptr->class != DRUID ){
 			return(WRONGCLASS);
 		}
-		/*midas*/
+		//midas
 		case 398:
 		if (ply_ptr->class != ALCHEMIST ){
 			return(WRONGCLASS);
 		}
-		/*attune*/
+		//attune
 		
 		case 402:
 		if (ply_ptr->class != ALCHEMIST ){
 			return(WRONGCLASS);
 		}
-		/*distill*/
+		//distill
 		
 		case 403:
 		if (ply_ptr->class != ALCHEMIST ){
 			return(WRONGCLASS);
 		}
-	}
+	}*/
 
 
 /* CHECK LEVEL*/
@@ -492,7 +505,7 @@ int skills (creature *ply_ptr, cmd *cmnd)
 	char 	str[2048];
 	char	skll[128][30];
 	char	cldwn[128][30];
-	int 	fd, cnt, i, j, lt, cmdno;
+	int 	fd, cnt, i, j, lt, cmdno, skillno;
 	long	duration, lv;
 	time_t  tt, ti, cd;
 	cmd 	tempcmd; 
@@ -500,70 +513,70 @@ int skills (creature *ply_ptr, cmd *cmnd)
 	
 	fd = ply_ptr->fd;
 	
-memset(str,0,strlen(str));
-strcpy (str, "Skills available: ");
+	memset(str,0,strlen(str));
+	strcpy (str, "Skills available: ");
 
-for(i=0,j=0; i< 400; i++){
+	for(i=0,j=0; i< 406; i++){
 	
-	
-	/*elog("343");*/
-	/*sprintf(g_buffer, "%i, %s, %i", i, cmdlist[i].cmdstr, can_use(ply_ptr, i));
-	
-	output_nl(fd, g_buffer);*/
-	
-	/*only consider skills that I want to see
-	for this, I use a distinction between level 1 and 0 on the cmdlist*/
-	if (cmdlist[i].level > 0){
-	if((can_use(ply_ptr, i) == CANUSE )|| (can_use(ply_ptr, i) == ONCOOLDOWN )){
-		/*elog("346");*/
-		/*elog(g_buffer);*/
-		strcpy(skll[j], cmdlist[i].cmdstr);
-		strcpy(cldwn[j], ", ");
-		/*cooldown stuff here*/
-		/*elog("353");*/
-		lt = cmdlist[i].lt;
-		if (lt > 0){
-			tt = time(0);
-			ti = ply_ptr->lasttime[lt].ltime;
-			cd = cmdlist[i].cooldown;
-			strcpy(cldwn[j], "[");
-			if ((cd-tt+ti) > 0){
-				sprintf(g_buffer, "%s", time_output(cd-tt+ti));
+
+		//elog("343");
+		//sprintf(g_buffer, "%i, %s, %i", i, cmdlist[i].cmdstr, can_use(ply_ptr, i));
+		
+		//output_nl(fd, g_buffer);
+		
+		/*only consider skills that I want to see
+		for this, I use a distinction between level 1 and 0 on the cmdlist*/
+		if (cmdlist[i].level > 0){
+			if((can_use(ply_ptr, i) == CANUSE )|| (can_use(ply_ptr, i) == ONCOOLDOWN )){
+				//elog("346");
+				//elog(g_buffer);
+				strcpy(skll[j], cmdlist[i].cmdstr);
+				strcpy(cldwn[j], ", ");
+				/*cooldown stuff here*/
+				/*elog("353");*/
+				lt = cmdlist[i].lt;
+				if (lt > 0){
+					tt = time(0);
+					ti = ply_ptr->lasttime[lt].ltime;
+					cd = cmdlist[i].cooldown;
+					strcpy(cldwn[j], "[");
+					if ((cd-tt+ti) > 0){
+						sprintf(g_buffer, "%s", time_output(cd-tt+ti));
+					}
+					else {
+						sprintf(g_buffer, "ready");
+					}
+					strcat(cldwn[j], g_buffer);		
+					strcat(cldwn[j], "]");
+					
+				}
+				else {
+					strcpy(cldwn[j], "[ready]");
+				}
+				strcat(cldwn[j], ", ");
+				//elog("355");
+				j++;
 			}
-			else {
-				sprintf(g_buffer, "ready");
-			}
-			strcat(cldwn[j], g_buffer);		
-			strcat(cldwn[j], "]");
+		}
+	}
+	//elog("366");
+	if(!j){
+		strcpy(str, "None.");
+	}
+	else {
+		/* qsort((void *)skll, j, 20, (PFNCOMPARE)strcmp); */
+		for(i=0; i<j; i++) {
+			strcat(str, skll[i]);
+			strcat(str, cldwn[i]);
 			
 		}
-		else {
-			strcpy(cldwn[j], "[ready]");
-		}
-		strcat(cldwn[j], ", ");
-		/*elog("355");*/
-		j++;
-	}
-	}
+		/*str[strlen(str)-2] = '.';
+		str[strlen(str)-1] = 0;*/
 }
-/*elog("366");*/
-if(!j){
-	strcpy(str, "None.");
-}
-else {
-	/* qsort((void *)skll, j, 20, (PFNCOMPARE)strcmp); */
-	for(i=0; i<j; i++) {
-		strcat(str, skll[i]);
-		strcat(str, cldwn[i]);
-		
-	}
-	/*str[strlen(str)-2] = '.';
-	str[strlen(str)-1] = 0;*/
-}
-/*elog("385");*/
+//elog("385");
 output_nl(fd, str);
 
-/*elog("389");*/
+//elog("389");
 /*F_CLR(Ply[fd], ply_ptr);*/
 RETURN(fd, command, 1);
 }

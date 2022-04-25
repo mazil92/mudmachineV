@@ -1,8 +1,8 @@
-1,100
+1,99
 ---------------ACT 1---------------
-1,100
+1,99
  
-1,100
+1,99
 THESE QUESTS ARE ALL TO DO WITH THE LITTLE MATCH GIRL
 1, 2
 Objective 2: Talk to the match girl about 'first'
@@ -10,3 +10,13 @@ Objective 2: Talk to the match girl about 'first'
 objective 3: Do something else
 1, 10
 Objective 10: do the first 9 quests
+1,1
+100
+2,2
+100
+3,3
+100
+203,203
+100
+220,220
+500

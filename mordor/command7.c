@@ -758,11 +758,13 @@ int backstab( creature *ply_ptr, cmd *cmnd )
 	fd = ply_ptr->fd;
 	rom_ptr = ply_ptr->parent_rom;
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != THIEF && ply_ptr->class != ASSASSIN &&
 	   ply_ptr->class < BUILDER) {
 		output(fd, "Only thieves and assassins may backstab.\n");
 		return(0);
-	}
+	}*/
 
 	if(cmnd->num < 2 || F_ISSET(ply_ptr, PBLIND)) {
 		output(fd, "Backstab what?\n");

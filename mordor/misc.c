@@ -359,6 +359,28 @@ char *obj_str(creature *viewpoint, object *obj, int num, int flags )
 		{
 			strcat( str, " (s)" );
 		}
+		char tempystr[20];
+		if ( F_ISSET(obj, OOBJECTIVESEE) )
+		{
+			
+			sprintf( tempystr, " (O%i)", multi_objective_item_target(obj) );
+			strcat(str, tempystr);
+		}
+		if ( F_ISSET(obj, OMULTIOBJSEE) )
+		{	
+			sprintf(tempystr, " (MO%i", multi_objective_item(obj));
+			strcat( str, tempystr );
+			if (F_ISSET(obj, OMULTIOBJBELOW)){
+				sprintf(tempystr, "B");
+				strcat( str, tempystr );
+			}
+			else if (F_ISSET(obj, OMULTIOBJABOVE)){
+				sprintf(tempystr, "A");
+				strcat( str, tempystr );
+			}
+			sprintf(tempystr, "%i)", multi_objective_item_target(obj));
+			strcat( str, tempystr );
+		}
 	}
 
 	return(str);
@@ -373,7 +395,7 @@ char *obj_str(creature *viewpoint, object *obj, int num, int flags )
 /* is done by replacing spaces with carriage returns before the end of  */
 /* the line.								*/
 
-#define MAXLINE	77
+#define MAXLINE	79 //SMITHY
 
 void delimit( char *str )
 {
@@ -384,7 +406,9 @@ void delimit( char *str )
 	j = (str) ? strlen(str) : 0;
 	if(j < MAXLINE)
 		return;
-
+	//SMITHY MODS HERE
+	//BECAUSE WHAT THE FLOOP IS THE INDENT
+	//WHY WAS IT EVER NECESSARY
 	len = 0; lastspace = -1; l = 0;
 	for(i=0; i<j; i++) {
 		if(str[i] == ' ')
@@ -397,9 +421,9 @@ void delimit( char *str )
 		if(len > MAXLINE && lastspace > -1) {
 			str[lastspace] = 0;
 			strcat(str2, &str[l]);
-			strcat(str2, "\n  ");
+			strcat(str2, "\n"); //SMITHY
 			l = lastspace + 1;
-			len = i - lastspace + 3;
+			len = i - lastspace + 1; //SMITHY
 			lastspace = -1;
 		}
 	}

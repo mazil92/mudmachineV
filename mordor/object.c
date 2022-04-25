@@ -129,7 +129,10 @@ object *find_obj(creature *ply_ptr, otag *first_ot, char *str, int val )
 	while(op) {
 		if(EQUAL(op->obj, str) &&
 		   (F_ISSET(ply_ptr, PDINVI) ?
-		   1:!F_ISSET(op->obj, OINVIS))) {
+		   1:!F_ISSET(op->obj, OINVIS))
+		   && (objective_item_checker(ply_ptr, op->obj) ? 1:!F_ISSET(op->obj, OOBJECTIVESEE))
+		   && (multi_objective_item_checker(ply_ptr, op->obj) ? 1:!F_ISSET(op->obj, OMULTIOBJSEE))
+		   ) {
 			match++;
 			if(match == val) {
 				found = 1;
@@ -169,7 +172,11 @@ int list_obj(char *str, creature *ply_ptr, otag	*first_otag )
 	op = first_otag;
 	while(op && strlen(str) < 2000) {
 		if( ct || ((F_ISSET(ply_ptr, PDINVI) ? 1:!F_ISSET(op->obj, OINVIS)) &&
-		   !F_ISSET(op->obj, OHIDDN) && !F_ISSET(op->obj, OSCENE))) {
+		   	!F_ISSET(op->obj, OHIDDN) &&
+		   	!F_ISSET(op->obj, OSCENE) &&
+		   	(multi_objective_item_checker(ply_ptr, op->obj) || (!F_ISSET(op->obj, OMULTIOBJSEE))) &&
+			(objective_item_checker(ply_ptr, op->obj) || (!F_ISSET(op->obj, OOBJECTIVESEE)))
+		   	)) {
 			m=1;
 			while(op->next_tag) {
 				if(!strcmp(op->next_tag->obj->name, op->obj->name) &&
@@ -178,7 +185,11 @@ int list_obj(char *str, creature *ply_ptr, otag	*first_otag )
 				   && ( ct || ((F_ISSET(ply_ptr, PDINVI) ?
 				   1:!F_ISSET(op->next_tag->obj, OINVIS)) &&
 				   !F_ISSET(op->next_tag->obj, OHIDDN) &&
-				   !F_ISSET(op->next_tag->obj, OSCENE)))) {
+				   !F_ISSET(op->next_tag->obj, OSCENE) &&
+				   (multi_objective_item_checker(ply_ptr, op->obj) || (!F_ISSET(op->obj, OMULTIOBJSEE))) &&
+				   (objective_item_checker(ply_ptr, op->obj) || (!F_ISSET(op->obj, OOBJECTIVESEE)))
+
+				   ))) {
 
 					m++;
 					op = op->next_tag;

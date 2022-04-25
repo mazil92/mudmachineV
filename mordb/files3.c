@@ -383,7 +383,7 @@ int talk_crt_act(char *str, ttag *tlk )
 
 //NEW ADDITION BY SMITHY
 //CYCLE THROUGH THE PARSED WORDS
-//ASK FOR THE WORD "IF" 
+//ASK FOR THE WORD "CONDITION" 
 //should that word be present, read the 3 words following
 //and add them to the tlk->key
 
@@ -444,6 +444,16 @@ int talk_crt_act(char *str, ttag *tlk )
 	}
 	else if(!strcmp(word[1],"OBJECTIVE")){
 		tlk->type = 5;
+		tlk->action = word[2];
+		tlk->target =  0;
+	}
+	else if(!strcmp(word[1],"MULTIOBJ")){
+		tlk->type = 6;
+		tlk->action = word[2];
+		tlk->target =  0;
+	}
+	else if(!strcmp(word[1],"SILENTOBJ")){
+		tlk->type = 7;
 		tlk->action = word[2];
 		tlk->target =  0;
 	}

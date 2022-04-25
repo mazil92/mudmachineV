@@ -1,3 +1,31 @@
+secret GIVE 1100 CONDITION OBJ TRUE 203
+Okay, I will share you the clue again:
+secret GIVE 1100 CONDITION OBJ FALSE 203
+here's your secret!
+chickens ATTACK CONDITION MULTIOBJABOVE 153 150
+you didn't save my chickens :(
+chickens ACTION hug player CONDITION MULTIOBJBELOW 154 150
+thank you for saving my chickens
+passwordone MULTIOBJ 010001900100 CONDITION OBJ FALSE 100
+Thank you for the passwordone!
+passwordtwo MULTIOBJ 010001900110 CONDITION OBJ FALSE 110
+Thank you for the passwordtwo!
+passwordthree MULTIOBJ 010001900120 CONDITION OBJ FALSE 120
+Thank you for the passwordthree!
+passwordfour MULTIOBJ 010001900130 CONDITION OBJ FALSE 130
+Thank you for the passwordfour!
+passwordfive MULTIOBJ 010001900140 CONDITION OBJ FALSE 140
+Thank you for the passwordfive!
+passwordsix MULTIOBJ 010001900150 CONDITION OBJ FALSE 150
+Thank you for the passwordsix!
+passwordseven MULTIOBJ 010001900160 CONDITION OBJ FALSE 160
+Thank you for the passwordseven!
+passwordeight MULTIOBJ 010001900170 CONDITION OBJ FALSE 170
+Thank you for the passwordeight!
+passwordnine MULTIOBJ 010001900180 CONDITION OBJ FALSE 180
+Thank you for the passwordnine!
+passwordten MULTIOBJ 010001900190 CONDITION OBJ FALSE 190
+Thank you for the passwordten!
 second CONDITION OBJ TRUE 2
 You'll have to search far and wide for the next one ;)
 first OBJECTIVE 2 CONDITION OBJ TRUE 1

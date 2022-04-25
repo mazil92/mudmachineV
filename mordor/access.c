@@ -7,6 +7,8 @@
  *      Copyright (C) 1998 John P. Freeman
  * $Id: access.c,v 6.14 2001/04/12 05:00:57 develop Exp $
  *
+
+
 21/01/2022
 Added some more ultility functions that I couldn't put in 
 other places due to reasons
@@ -145,6 +147,7 @@ int spelltype;
 
 { "identify",		SIDENTIFY, identify,		0,		NOREALM, 1, NOPROF,	NOTYPE },
 
+{ "smithy-custom-one", SSMITHYCUSTOMONE, smithy_custom_one, 0, NOREALM, 0, NOPROF, NOTYPE},
 /* EARTH UTILITY SPELL, 						2,      EARTH, ?? 	?? 			??*/
 /* RESIST EARTH, 								4,      EARTH, 15 	INTENSITY 	PBUFF*/
 /* EARTH UTILITY SPELL 							5,      EARTH, ?? 	?? 			??*/

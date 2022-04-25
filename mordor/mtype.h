@@ -147,6 +147,7 @@ Added SIDENTIFY spell
 #define STRMOR		61	/* tremor */
 #define SFLOOD		62	/* flood */
 #define SIDENTIFY	63	/* identify spell */
+#define SSMITHYCUSTOMONE 64 /* smithy_custom_one */
 
 
 /*Trap types */

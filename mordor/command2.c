@@ -519,6 +519,21 @@ int get(creature *ply_ptr, cmd *cmnd )
 			return(0);
 		}
 
+		if(F_ISSET(obj_ptr, OSINGLEOBJ) ){
+			if (!objective_item_pickup(ply_ptr, obj_ptr)){
+				output(fd, "You can't seem to pick that up\n");
+				return(0);
+			}
+
+		}
+		if(F_ISSET(obj_ptr, OMULTIOBJ) ){
+			if (!multi_objective_item_pickup(ply_ptr, obj_ptr)){
+				output(fd, "You can't seem to pick that up\n");
+				return(0);
+			}
+
+		}
+
 		if(F_ISSET(obj_ptr, OTEMPP)) {
 			F_CLR(obj_ptr, OPERM2);
 			F_CLR(obj_ptr, OTEMPP);
@@ -552,6 +567,8 @@ int get(creature *ply_ptr, cmd *cmnd )
 		broadcast_rom(fd, rom_ptr->rom_num, "%M gets %1i.",
 			      m2args(ply_ptr, obj_ptr));
 
+		
+
 		if(obj_ptr->type == MONEY) {
 			ply_ptr->gold += obj_ptr->value;
 			free_obj(obj_ptr);
@@ -561,7 +578,16 @@ int get(creature *ply_ptr, cmd *cmnd )
 			output(fd, g_buffer);
 		}
 		else
-			add_obj_crt(obj_ptr, ply_ptr);
+			//smithy add
+			//new objects that don't stay in inventory
+			if (F_ISSET(obj_ptr, ONOTGIVEN)){
+				mprint(fd, "You feel the magical power of %1i flow into you as it dissapears in your hands.\n", m1arg(obj_ptr));
+				broadcast_rom(fd, rom_ptr->rom_num, "%M absorbs the magical powers of %1i.",
+			      m2args(ply_ptr, obj_ptr));
+			}
+			else{
+				add_obj_crt(obj_ptr, ply_ptr);
+			}
 		return(0);
 	}
 

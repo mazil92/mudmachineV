@@ -216,10 +216,11 @@ int transform( creature *ply_ptr, cmd *cmnd )
   time_t   t;
 
 
-  if(ply_ptr->class != DRUID && ply_ptr->class < BUILDER) {
+  /*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skillsif(ply_ptr->class != DRUID && ply_ptr->class < BUILDER) {
     	        output(ply_ptr->fd,"You don't know how to transform anything.\n");
 		return(0);
-  }   
+  }  */ 
 
   if(cmnd->num < 2)  {
       output(ply_ptr->fd,"Transform what?\n");
@@ -289,10 +290,11 @@ int transmute( creature *ply_ptr, cmd *cmnd )
   time_t   t;
 
 
-  if(ply_ptr->class != ALCHEMIST && ply_ptr->class < BUILDER) {
+  /*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skillsif(ply_ptr->class != ALCHEMIST && ply_ptr->class < BUILDER) {
     	        output(ply_ptr->fd,"You don't know how to transmute anything.\n");
 		return(0);
-  }   
+  }  */ 
 
   if(cmnd->num < 2)  {
       output(ply_ptr->fd,"Transmute what?\n");
@@ -728,13 +730,14 @@ int scout(creature *ply_ptr, cmd *cmnd)
 		output(fd, "Scout where?\n");
 		return(0);
 	}
-	if(ply_ptr->class < IMMORTAL) {
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skillsif(ply_ptr->class < IMMORTAL) {
 	   if (ply_ptr->class != RANGER
 		&& ply_ptr->class != ASSASSIN && ply_ptr->class != THIEF) {
 		output(fd, "Only certain classes can scout.\n");
 		return(0);
 	   }
-	}
+	}*/
 
      
 	F_CLR(ply_ptr, PHIDDN);

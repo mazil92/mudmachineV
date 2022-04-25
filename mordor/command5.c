@@ -647,12 +647,13 @@ int search(creature *ply_ptr, cmd *cmnd )
     fd = ply_ptr->fd;
     rom_ptr = ply_ptr->parent_rom;
 
-    chance = 15 + 5*bonus[(int)ply_ptr->piety] + ply_ptr->level*2;
-    chance = MIN(chance, 90);
+    chance = 45 + 5*bonus[(int)ply_ptr->piety] + ply_ptr->level*4;
+    chance = MIN(chance, 70 + ply_ptr->level);
+    /*rebalanced by smithy
     if(ply_ptr->class == RANGER)
         chance += ply_ptr->level*8;
     if(ply_ptr->class == DRUID)
-		chance += ply_ptr->level*6;
+		chance += ply_ptr->level*6;*/
     if(F_ISSET(ply_ptr, PBLIND))
 		chance = MIN(chance, 20);
     if(ply_ptr->class >= BUILDER)
@@ -839,24 +840,24 @@ int hide(creature *ply_ptr, cmd *cmnd )
 	}
 	cp = cp->next_tag;
     }
-
+    //rebalanced by smithy
     ply_ptr->lasttime[LT_HIDES].ltime = t;
     ply_ptr->lasttime[LT_HIDES].interval = (ply_ptr->class == THIEF ||
-        ply_ptr->class == ASSASSIN || ply_ptr->class == RANGER) ? 5:15;
+        ply_ptr->class == ASSASSIN || ply_ptr->class == RANGER) ? 5:5;
 
     if(cmnd->num == 1) {
 
 		if ( ply_ptr->class == DM )
 			chance = 100;
-        else if(ply_ptr->class == THIEF || ply_ptr->class == ASSASSIN)
+        /*else if(ply_ptr->class == THIEF || ply_ptr->class == ASSASSIN)
             chance = MIN(90, 5 + 6*ply_ptr->level + 
                 3*bonus[(int)ply_ptr->dexterity]);
         else if(ply_ptr->class == RANGER || ply_ptr->class == DRUID)
             chance = 5 + 10*ply_ptr->level +
-                3*bonus[(int)ply_ptr->dexterity];
+                3*bonus[(int)ply_ptr->dexterity];*/
         else
-            chance = MIN(90, 5 + 2*ply_ptr->level +
-                3*bonus[(int)ply_ptr->dexterity]);
+            chance = MIN(70+ply_ptr->level, 5 + 2*ply_ptr->level +
+                (int)ply_ptr->dexterity);
 
 
         output(fd, "You attempt to hide in the shadows.\n");

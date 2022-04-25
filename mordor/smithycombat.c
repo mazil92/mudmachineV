@@ -30,6 +30,36 @@ long compute_resistance_player(creature *ply_ptr, int damage_type){
 	int i, j;
 	long temp =0, temp2 =0;
 
+	//get base resistances from tier
+	int resists, tier;
+	tier = check_attribute_tier(ply_ptr, 6);
+	switch (tier){
+		case 0:
+			resists = 20*ply_ptr->level;
+		break;
+		case 1:
+			resists = 15*ply_ptr->level;
+		break;
+		case 2:
+			resists = 12*ply_ptr->level;
+		break;
+		case 3:
+			resists = 9*ply_ptr->level;
+		break;
+		case 4:
+			resists = 4*ply_ptr->level;
+		break;
+		case 5:
+			resists = 1*ply_ptr->level;
+		break;
+		default:
+			resists = 1*ply_ptr->level;
+		break;
+	}
+	//no base resistance to divine, sorry
+	if (damage_type == DDIVINE){
+		resists =0;
+	}
 	/*check each wear location
 	look if they're wearing something there
 	if they are, look if that item grants resistance to the
@@ -60,8 +90,8 @@ long compute_resistance_player(creature *ply_ptr, int damage_type){
 	}
 	/*add other resistance sources here*/
 	
-	
-return (temp+temp2);
+resists = (int)resists/10 + temp + temp2;	
+return (resists);
 }
 
 /*compute_resistance_creature
@@ -161,7 +191,32 @@ short compute_DR_player (creature *ply_ptr){
 	int 	DR, i;
 
 	
-	DR = 0;
+	//default DR based on tier and level
+	int tier;
+	tier = check_attribute_tier(ply_ptr, 5);
+	switch (tier){
+		case 0:
+			DR = 18*ply_ptr->level;
+		break;
+		case 1:
+			DR = 16*ply_ptr->level;
+		break;
+		case 2:
+			DR = 13*ply_ptr->level;
+		break;
+		case 3:
+			DR = 10*ply_ptr->level;
+		break;
+		case 4:
+			DR = 7*ply_ptr->level;
+		break;
+		case 5:
+			DR = 5*ply_ptr->level;
+		break;
+		default:
+			DR = 5*ply_ptr->level;
+		break;
+	}
 	for(i=0; i<MAXWEAR; i++)
 		if(ply_ptr->ready[i] && ((F_ISSET(ply_ptr->ready[i], OGIVESDR) )))
 			DR = DR + ply_ptr->ready[i]->armor;
@@ -211,12 +266,12 @@ void damage_output (creature *ply_ptr, int damage, int damage_type){
 					output(fd, g_buffer);  
 					break;}
 				case DEARTH: {
-					ANSI(fd, AM_LOWINTESITY);
+					ANSI(fd, AM_BOLD);
 					ANSI(fd, AFC_GREEN);
 					output(fd, g_buffer);  
 					break;}
 				case DWIND: {
-					ANSI(fd, AM_LOWINTESITY);
+					ANSI(fd, AM_BOLD);
 					ANSI(fd, AFC_CYAN);
 					output(fd, g_buffer);  
 					break;}
@@ -247,7 +302,122 @@ void damage_output (creature *ply_ptr, int damage, int damage_type){
 					break;}
 				}
 }
+void tier_coloured_output (creature *ply_ptr, char *str, int tier){
+	int 	fd;
+	
+	fd = ply_ptr->fd;
+	sprintf(g_buffer, "%s", str);
+	switch(tier){
+		case 0:
+			ANSI(fd, AM_BOLD);
+			ANSI(fd, AFC_MAGENTA);
+			output(fd, g_buffer); 
+		break;
+		case 1:
+			ANSI(fd, AM_BOLD);
+			ANSI(fd, AFC_RED);
+			output(fd, g_buffer); 
+		break;
+		case 2:
+			ANSI(fd, AM_BOLD);
+			ANSI(fd, AFC_YELLOW);
+			output(fd, g_buffer); 
+		break;
+		case 3:
+			ANSI(fd, AM_BOLD);
+			ANSI(fd, AFC_GREEN);
+			output(fd, g_buffer); 
+		break;
+		case 4:
+			ANSI(fd, AM_BOLD);
+			ANSI(fd, AFC_CYAN);
+			output(fd, g_buffer); 
+		break;
+		case 5:
+			ANSI(fd, AM_BOLD);
+			ANSI(fd, AFC_BLUE);
+			output(fd, g_buffer); 
+		break;
+	}
+	ANSI(fd, AM_NORMAL);
+	ANSI(fd, AFC_WHITE);
+}
 
+void damage_coloured_output (creature *ply_ptr, char *str, int damage_type){
+	int 	fd;
+	
+	fd = ply_ptr->fd;
+	sprintf(g_buffer, "%s", str);
+			switch(damage_type){
+				case DSHARP: {
+					ANSI(fd, AM_LOWINTESITY);
+					ANSI(fd, AFC_WHITE);
+					output(fd, g_buffer); 
+					break;}
+				case DTHRUST:{ 
+					ANSI(fd, AM_ITALIC);
+					ANSI(fd, AFC_WHITE);
+					output(fd, g_buffer); 
+					break;}
+				case DPOLE: {
+					ANSI(fd, AM_ITALIC);
+					ANSI(fd, AFC_YELLOW);
+					output(fd, g_buffer); 
+					break;}
+				case DBLUNT: {
+					ANSI(fd, AM_BOLD);
+					ANSI(fd, AFC_BLACK);
+					output(fd, g_buffer);  
+					break;}
+				case DMISSILE: {
+					ANSI(fd, AM_UNDERLINE);
+					ANSI(fd, AFC_WHITE);
+					output(fd, g_buffer); 
+					break;}
+				case DHAND: {
+					ANSI(fd, AM_NORMAL);
+					ANSI(fd, AFC_WHITE);
+					output(fd, g_buffer);  
+					break;}
+				case DEARTH: {
+					ANSI(fd, AM_BOLD);
+					ANSI(fd, AFC_GREEN);
+					output(fd, g_buffer);  
+					break;}
+				case DWIND: {
+					ANSI(fd, AM_BOLD);
+					ANSI(fd, AFC_CYAN);
+					output(fd, g_buffer);  
+					break;}
+				case DFIRE: {
+					ANSI(fd, AM_BOLD);
+					ANSI(fd, AFC_RED);
+					output(fd, g_buffer); 
+					break;}
+				case DWATER: {
+					ANSI(fd, AM_BOLD);
+					ANSI(fd, AFC_BLUE);
+					output(fd, g_buffer); 
+					break;}
+				case DPOISON: {
+					ANSI(fd, AM_REVERSE);
+					ANSI(fd, AFC_GREEN);
+					output(fd, g_buffer); 
+					break;}
+				case DMAGIC: {
+					ANSI(fd, AM_BOLD);
+					ANSI(fd, AFC_MAGENTA);
+					output(fd, g_buffer); 
+					break;}
+				case DDIVINE: {
+					ANSI(fd, AM_BOLD);
+					ANSI(fd, AFC_YELLOW);
+					output(fd, g_buffer);  
+					break;}
+				}
+	ANSI(fd, AM_NORMAL);
+	ANSI(fd, AFC_WHITE);
+}
 
 /*armor_confidence
 this function provides a random number between 0 and 100 to be used

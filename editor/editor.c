@@ -497,17 +497,17 @@ void convert_from_csv(){
 					
 				}
 				
-				/*crt_ptr->rom_num = array[105];
-				crt_ptr->bank_balance = array[106];
+				//crt_ptr->rom_num = array[105];
+				//crt_ptr->bank_balance = array[106];
 				strcpy(crt_ptr->title, array[107]);
 				for (i=0; i<5; i++){
-					crt_ptr->misc_stats[0] = array[108+i];
-					printf(".");
+					crt_ptr->misc_stats[i] = atoi(array[108+i]);
+					//printf(".");
 				}
-				crt_ptr->clanindex = array[113];printf(".");
-				crt_ptr->clanexp = array[114];printf(".");
-				crt_ptr->guildtype = array[115];printf("n");
-				crt_ptr->guildexp = array[116];printf(".");*/
+				//crt_ptr->clanindex = array[113];printf(".");
+				//crt_ptr->clanexp = array[114];printf(".");
+				//crt_ptr->guildtype = array[115];printf("n");
+				//crt_ptr->guildexp = array[116];printf(".");
 				crt_ptr->special1 = (long)atoi(array[117]);
 				crt_ptr->special2 = (long)atoi(array[118]);
 				/*posit(5,20);*/ printf("end of values\n");
@@ -570,7 +570,7 @@ void convert_from_csv(){
 					
 
 					printf("Hit Enter:\n");
-					getnum(&i,0,0);
+					//getnum(&i,0,0);
 				
 				if (save_creature(crt_ptr, index) < 0){
 					posit(5,20); printf("error with monster %i", index);
@@ -1289,16 +1289,18 @@ void convert_from_csv(){
 				//printf("random: %s\n", array[25+i]);
 			}
  
-			int tmep = atoi(array[37]);
-
+			int tmep = atoi(array[36]);
+			//possibly it needs to be sprintf(rom-ptr->traffic, array[37])??
 			rom_ptr->traffic = tmep;
-			printf("traffic: %s\n", array[37]);
-			printf("tmep: %i\n", tmep);
-			printf("tmep: %c\n", tmep);
-			printf("tmep: %-3d\n", tmep);
-			printf("traffic: %i\n", rom_ptr->traffic);
-			printf("traffic: %c\n", rom_ptr->traffic);
-			printf("traffic: %-3d\n", rom_ptr->traffic);
+			//strncpy(&(rom_ptr->traffic), array[37], 1);
+			//sprintf(&rom_ptr->traffic, array[36]);
+			//printf("traffic: %s\n", array[36]);
+			//printf("tmep: %i\n", tmep);
+			//printf("tmep: %c\n", tmep);
+			//printf("tmep: %-3d\n", tmep);
+			//printf("traffic: %i\n", rom_ptr->traffic);
+			//printf("traffic: %c\n", rom_ptr->traffic);
+			//printf("traffic: %-3d\n", rom_ptr->traffic);
 			for (i=0; i<10; i++){
 				zero(perm, sizeof(lasttime));
 
@@ -1409,7 +1411,7 @@ void convert_from_csv(){
 					//delim[1] = ',';
 					token = strtok_r(array[78+i], ",", &rest);
 						//get some more tokens
-					while (token != NULL && z<127){
+					while (token != NULL && z<132){
 						strcpy(exitarray[z], token);
 						//printf("exitarray %i: %s [%s]\n", z, exitarray[z], token);
 						z++;
@@ -1435,6 +1437,539 @@ void convert_from_csv(){
 						//CONSIDER THE exit number you are up to by checking the
 					//value of i. Then, read your exit array values
 					// and load them into the appropriate exit
+					if (i == 49) {
+						strcpy(exit49->name, exitarray[0]);
+						exit49->room = (long)atoi(exitarray[1]);
+						exit49->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit49, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit49->rand_mesg[0], exitarray[130]);
+						strcpy(exit49->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 48) {
+						strcpy(exit48->name, exitarray[0]);
+						exit48->room = (long)atoi(exitarray[1]);
+						exit48->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit48, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit48->rand_mesg[0], exitarray[130]);
+						strcpy(exit48->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 47) {
+						strcpy(exit47->name, exitarray[0]);
+						exit47->room = (long)atoi(exitarray[1]);
+						exit47->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit47, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit47->rand_mesg[0], exitarray[130]);
+						strcpy(exit47->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 46) {
+						strcpy(exit46->name, exitarray[0]);
+						exit46->room = (long)atoi(exitarray[1]);
+						exit46->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit46, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit46->rand_mesg[0], exitarray[130]);
+						strcpy(exit46->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 45) {
+						strcpy(exit45->name, exitarray[0]);
+						exit45->room = (long)atoi(exitarray[1]);
+						exit45->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit45, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit45->rand_mesg[0], exitarray[130]);
+						strcpy(exit45->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 44) {
+						strcpy(exit44->name, exitarray[0]);
+						exit44->room = (long)atoi(exitarray[1]);
+						exit44->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit44, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit44->rand_mesg[0], exitarray[130]);
+						strcpy(exit44->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 43) {
+						strcpy(exit43->name, exitarray[0]);
+						exit43->room = (long)atoi(exitarray[1]);
+						exit43->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit43, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit43->rand_mesg[0], exitarray[130]);
+						strcpy(exit43->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 42) {
+						strcpy(exit42->name, exitarray[0]);
+						exit42->room = (long)atoi(exitarray[1]);
+						exit42->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit42, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit42->rand_mesg[0], exitarray[130]);
+						strcpy(exit42->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 41) {
+						strcpy(exit41->name, exitarray[0]);
+						exit41->room = (long)atoi(exitarray[1]);
+						exit41->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit41, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit41->rand_mesg[0], exitarray[130]);
+						strcpy(exit41->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 40) {
+						strcpy(exit40->name, exitarray[0]);
+						exit40->room = (long)atoi(exitarray[1]);
+						exit40->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit40, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit40->rand_mesg[0], exitarray[130]);
+						strcpy(exit40->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 39) {
+						strcpy(exit39->name, exitarray[0]);
+						exit39->room = (long)atoi(exitarray[1]);
+						exit39->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit39, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit39->rand_mesg[0], exitarray[130]);
+						strcpy(exit39->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 38) {
+						strcpy(exit38->name, exitarray[0]);
+						exit38->room = (long)atoi(exitarray[1]);
+						exit38->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit38, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit38->rand_mesg[0], exitarray[130]);
+						strcpy(exit38->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 37) {
+						strcpy(exit37->name, exitarray[0]);
+						exit37->room = (long)atoi(exitarray[1]);
+						exit37->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit37, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit37->rand_mesg[0], exitarray[130]);
+						strcpy(exit37->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 36) {
+						strcpy(exit36->name, exitarray[0]);
+						exit36->room = (long)atoi(exitarray[1]);
+						exit36->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit36, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit36->rand_mesg[0], exitarray[130]);
+						strcpy(exit36->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 35) {
+						strcpy(exit35->name, exitarray[0]);
+						exit35->room = (long)atoi(exitarray[1]);
+						exit35->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit35, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit35->rand_mesg[0], exitarray[130]);
+						strcpy(exit35->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 34) {
+						strcpy(exit34->name, exitarray[0]);
+						exit34->room = (long)atoi(exitarray[1]);
+						exit34->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit34, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit34->rand_mesg[0], exitarray[130]);
+						strcpy(exit34->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 33) {
+						strcpy(exit33->name, exitarray[0]);
+						exit33->room = (long)atoi(exitarray[1]);
+						exit33->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit33, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit33->rand_mesg[0], exitarray[130]);
+						strcpy(exit33->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 32) {
+						strcpy(exit32->name, exitarray[0]);
+						exit32->room = (long)atoi(exitarray[1]);
+						exit32->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit32, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit32->rand_mesg[0], exitarray[130]);
+						strcpy(exit32->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 31) {
+						strcpy(exit31->name, exitarray[0]);
+						exit31->room = (long)atoi(exitarray[1]);
+						exit31->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit31, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit31->rand_mesg[0], exitarray[130]);
+						strcpy(exit31->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 30) {
+						strcpy(exit30->name, exitarray[0]);
+						exit30->room = (long)atoi(exitarray[1]);
+						exit30->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit30, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit30->rand_mesg[0], exitarray[130]);
+						strcpy(exit30->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 29) {
+						strcpy(exit29->name, exitarray[0]);
+						exit29->room = (long)atoi(exitarray[1]);
+						exit29->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit29, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit29->rand_mesg[0], exitarray[130]);
+						strcpy(exit29->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 28) {
+						strcpy(exit28->name, exitarray[0]);
+						exit28->room = (long)atoi(exitarray[1]);
+						exit28->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit28, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit28->rand_mesg[0], exitarray[130]);
+						strcpy(exit28->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 27) {
+						strcpy(exit27->name, exitarray[0]);
+						exit27->room = (long)atoi(exitarray[1]);
+						exit27->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit27, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit27->rand_mesg[0], exitarray[130]);
+						strcpy(exit27->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 26) {
+						strcpy(exit26->name, exitarray[0]);
+						exit26->room = (long)atoi(exitarray[1]);
+						exit26->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit26, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit26->rand_mesg[0], exitarray[130]);
+						strcpy(exit26->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 25) {
+						strcpy(exit25->name, exitarray[0]);
+						exit25->room = (long)atoi(exitarray[1]);
+						exit25->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit25, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit25->rand_mesg[0], exitarray[130]);
+						strcpy(exit25->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 24) {
+						strcpy(exit24->name, exitarray[0]);
+						exit24->room = (long)atoi(exitarray[1]);
+						exit24->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit24, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit24->rand_mesg[0], exitarray[130]);
+						strcpy(exit24->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 23) {
+						strcpy(exit23->name, exitarray[0]);
+						exit23->room = (long)atoi(exitarray[1]);
+						exit23->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit23, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit23->rand_mesg[0], exitarray[130]);
+						strcpy(exit23->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 22) {
+						strcpy(exit22->name, exitarray[0]);
+						exit22->room = (long)atoi(exitarray[1]);
+						exit22->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit22, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit22->rand_mesg[0], exitarray[130]);
+						strcpy(exit22->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 21) {
+						strcpy(exit21->name, exitarray[0]);
+						exit21->room = (long)atoi(exitarray[1]);
+						exit21->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit21, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit21->rand_mesg[0], exitarray[130]);
+						strcpy(exit21->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 20) {
+						strcpy(exit20->name, exitarray[0]);
+						exit20->room = (long)atoi(exitarray[1]);
+						exit20->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit20, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit20->rand_mesg[0], exitarray[130]);
+						strcpy(exit20->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 19) {
+						strcpy(exit19->name, exitarray[0]);
+						exit19->room = (long)atoi(exitarray[1]);
+						exit19->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit19, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit19->rand_mesg[0], exitarray[130]);
+						strcpy(exit19->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 18) {
+						strcpy(exit18->name, exitarray[0]);
+						exit18->room = (long)atoi(exitarray[1]);
+						exit18->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit18, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit18->rand_mesg[0], exitarray[130]);
+						strcpy(exit18->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 17) {
+						strcpy(exit17->name, exitarray[0]);
+						exit17->room = (long)atoi(exitarray[1]);
+						exit17->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit17, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit17->rand_mesg[0], exitarray[130]);
+						strcpy(exit17->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 16) {
+						strcpy(exit16->name, exitarray[0]);
+						exit16->room = (long)atoi(exitarray[1]);
+						exit16->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit16, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit16->rand_mesg[0], exitarray[130]);
+						strcpy(exit16->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 15) {
+						strcpy(exit15->name, exitarray[0]);
+						exit15->room = (long)atoi(exitarray[1]);
+						exit15->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit15, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit15->rand_mesg[0], exitarray[130]);
+						strcpy(exit15->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 14) {
+						strcpy(exit14->name, exitarray[0]);
+						exit14->room = (long)atoi(exitarray[1]);
+						exit14->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit14, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit14->rand_mesg[0], exitarray[130]);
+						strcpy(exit14->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 13) {
+						strcpy(exit13->name, exitarray[0]);
+						exit13->room = (long)atoi(exitarray[1]);
+						exit13->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit13, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit13->rand_mesg[0], exitarray[130]);
+						strcpy(exit13->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 12) {
+						strcpy(exit12->name, exitarray[0]);
+						exit12->room = (long)atoi(exitarray[1]);
+						exit12->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit12, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit12->rand_mesg[0], exitarray[130]);
+						strcpy(exit12->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 11) {
+						strcpy(exit11->name, exitarray[0]);
+						exit11->room = (long)atoi(exitarray[1]);
+						exit11->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit11, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit11->rand_mesg[0], exitarray[130]);
+						strcpy(exit11->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 10) {
+						strcpy(exit10->name, exitarray[0]);
+						exit10->room = (long)atoi(exitarray[1]);
+						exit10->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit10, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit10->rand_mesg[0], exitarray[130]);
+						strcpy(exit10->rand_mesg[1], exitarray[131]);
+					}
+					if (i == 9) {
+						strcpy(exit9->name, exitarray[0]);
+						exit9->room = (long)atoi(exitarray[1]);
+						exit9->key = (long)atoi(exitarray[2]);
+						for (j=0; j<128; j++){
+							if (exitarray[j+2] != 0){
+								//printf("need to set an exit flag from array[%i]: %s \n", j+81+13*i, array[j+81+13*i]+1);
+								F_SET(exit9, (long)atoi(exitarray[j+2])-1);
+							}
+						}
+						strcpy(exit9->rand_mesg[0], exitarray[130]);
+						strcpy(exit9->rand_mesg[1], exitarray[131]);
+					}
 					if (i == 8) {
 						strcpy(exit8->name, exitarray[0]);
 						exit8->room = (long)atoi(exitarray[1]);
@@ -1445,6 +1980,8 @@ void convert_from_csv(){
 								F_SET(exit8, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit8->rand_mesg[0], exitarray[130]);
+						strcpy(exit8->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 7) {
 						strcpy(exit7->name, exitarray[0]);
@@ -1456,6 +1993,8 @@ void convert_from_csv(){
 								F_SET(exit7, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit7->rand_mesg[0], exitarray[130]);
+						strcpy(exit7->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 6) {
 						strcpy(exit6->name, exitarray[0]);
@@ -1467,6 +2006,8 @@ void convert_from_csv(){
 								F_SET(exit6, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit6->rand_mesg[0], exitarray[130]);
+						strcpy(exit6->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 5) {
 						strcpy(exit5->name, exitarray[0]);
@@ -1478,6 +2019,8 @@ void convert_from_csv(){
 								F_SET(exit5, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit5->rand_mesg[0], exitarray[130]);
+						strcpy(exit5->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 4) {
 						strcpy(exit4->name, exitarray[0]);
@@ -1489,6 +2032,8 @@ void convert_from_csv(){
 								F_SET(exit4, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit4->rand_mesg[0], exitarray[130]);
+						strcpy(exit4->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 3) {
 						strcpy(exit3->name, exitarray[0]);
@@ -1500,6 +2045,8 @@ void convert_from_csv(){
 								F_SET(exit3, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit3->rand_mesg[0], exitarray[130]);
+						strcpy(exit3->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 2) {
 						strcpy(exit2->name, exitarray[0]);
@@ -1511,7 +2058,8 @@ void convert_from_csv(){
 								F_SET(exit2, (long)atoi(exitarray[j+2])-1);
 							}
 						}
-
+						strcpy(exit2->rand_mesg[0], exitarray[130]);
+						strcpy(exit2->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 1) {
 						strcpy(exit1->name, exitarray[0]);
@@ -1523,6 +2071,8 @@ void convert_from_csv(){
 								F_SET(exit1, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit1->rand_mesg[0], exitarray[130]);
+						strcpy(exit1->rand_mesg[1], exitarray[131]);
 					}
 					if (i == 0) {
 						strcpy(exit0->name, exitarray[0]);
@@ -1534,6 +2084,8 @@ void convert_from_csv(){
 								F_SET(exit0, (long)atoi(exitarray[j+2])-1);
 							}
 						}
+						strcpy(exit0->rand_mesg[0], exitarray[130]);
+						strcpy(exit0->rand_mesg[1], exitarray[131]);
 					}
 					//printf("%s\n", exit->name);
 					
@@ -1552,59 +2104,312 @@ void convert_from_csv(){
 						
 				}
 					
+				
+				if (i == 49){
+					xtagAX->next_tag = 0;
+					if (exit49 && strlen(exit49->name) > 1) xtagAX->ext = exit49;
+					else xtagAX->ext = 0;
+				}
+				if (i == 48){
+					if (!xtagAX->ext) xtagAW->next_tag =0;
+					else xtagAW->next_tag = xtagAX;
+					if (exit48 && strlen(exit48->name) > 1) xtagAW->ext = exit48;
+					else xtagAW->ext = 0;
+				}
+				if (i == 47){
+					if (!xtagAW->ext) xtagAV->next_tag =0;
+					else xtagAV->next_tag = xtagAW;
+					if (exit47 && strlen(exit47->name) > 1) xtagAV->ext = exit47;
+					else xtagAV->ext = 0;
+				}
+				if (i == 46){
+					if (!xtagAV->ext) xtagAU->next_tag =0;
+					else xtagAU->next_tag = xtagAV;
+					if (exit46 && strlen(exit46->name) > 1) xtagAU->ext = exit46;
+					else xtagAU->ext = 0;
+				}
+				if (i == 45){
+					if (!xtagAU->ext) xtagA->next_tag =0;
+					else xtagAT->next_tag = xtagAU;
+					if (exit45 && strlen(exit45->name) > 1) xtagAT->ext = exit45;
+					else xtagAT->ext = 0;
+				}
+				if (i == 44){
+					if (!xtagAT->ext) xtagAS->next_tag =0;
+					else xtagAS->next_tag = xtagAT;
+					if (exit44 && strlen(exit44->name) > 1) xtagAS->ext = exit44;
+					else xtagAS->ext = 0;
+				}
+				if (i == 43){
+					if (!xtagAS->ext) xtagAR->next_tag =0;
+					else xtagAR->next_tag = xtagAS;
+					if (exit43 && strlen(exit43->name) > 1) xtagAR->ext = exit43;
+					else xtagAR->ext = 0;
+				}
+				if (i == 42){
+					if (!xtagAR->ext) xtagAQ->next_tag =0;
+					else xtagAQ->next_tag = xtagAR;
+					if (exit42 && strlen(exit42->name) > 1) xtagAQ->ext = exit42;
+					else xtagAQ->ext = 0;
+				}
+				if (i == 41){
+					if (!xtagAQ->ext) xtagAP->next_tag =0;
+					else xtagAP->next_tag = xtagAQ;
+					if (exit41 && strlen(exit41->name) > 1) xtagAP->ext = exit41;
+					else xtagAP->ext = 0;
+				}
+				if (i == 40){
+					if (!xtagAP->ext) xtagAO->next_tag =0;
+					else xtagAO->next_tag = xtagAP;
+					if (exit40 && strlen(exit40->name) > 1) xtagAO->ext = exit40;
+					else xtagAO->ext = 0;
+				}
+				if (i == 39){
+					if (!xtagAO->ext) xtagAN->next_tag =0;
+					else xtagAN->next_tag = xtagAO;
+					if (exit39 && strlen(exit39->name) > 1) xtagAN->ext = exit39;
+					else xtagAN->ext = 0;
+				}
+				if (i == 38){
+					if (!xtagAN->ext) xtagAM->next_tag =0;
+					else xtagAM->next_tag = xtagAN;
+					if (exit38 && strlen(exit38->name) > 1) xtagAM->ext = exit38;
+					else xtagAM->ext = 0;
+				}
+				if (i == 37){
+					if (!xtagAM->ext) xtagAL->next_tag =0;
+					else xtagAL->next_tag = xtagAM;
+					if (exit37 && strlen(exit37->name) > 1) xtagAL->ext = exit37;
+					else xtagAL->ext = 0;
+				}
+				if (i == 36){
+					if (!xtagAL->ext) xtagAK->next_tag =0;
+					else xtagAK->next_tag = xtagAL;
+					if (exit36 && strlen(exit36->name) > 1) xtagAK->ext = exit36;
+					else xtagAK->ext = 0;
+				}
+				if (i == 35){
+					if (!xtagAK->ext) xtagAJ->next_tag =0;
+					else xtagAJ->next_tag = xtagAK;
+					if (exit35 && strlen(exit35->name) > 1) xtagAJ->ext = exit35;
+					else xtagAJ->ext = 0;
+				}
+				if (i == 34){
+					if (!xtagAJ->ext) xtagAI->next_tag =0;
+					else xtagAI->next_tag = xtagAJ;
+					if (exit34 && strlen(exit34->name) > 1) xtagAI->ext = exit34;
+					else xtagAI->ext = 0;
+				}
+				if (i == 33){
+					if (!xtagAI->ext) xtagAH->next_tag =0;
+					else xtagAH->next_tag = xtagAI;
+					if (exit33 && strlen(exit33->name) > 1) xtagAH->ext = exit33;
+					else xtagAH->ext = 0;
+				}
+				if (i == 32){
+					if (!xtagAH->ext) xtagAG->next_tag =0;
+					else xtagAG->next_tag = xtagAH;
+					if (exit32 && strlen(exit32->name) > 1) xtagAG->ext = exit32;
+					else xtagAG->ext = 0;
+				}
+				if (i == 31){
+					if (!xtagAG->ext) xtagAF->next_tag =0;
+					else xtagAF->next_tag = xtagAG;
+					if (exit31 && strlen(exit31->name) > 1) xtagAF->ext = exit31;
+					else xtagAF->ext = 0;
+				}
+				if (i == 30){
+					if (!xtagAF->ext) xtagAE->next_tag =0;
+					else xtagAE->next_tag = xtagAF;
+					if (exit30 && strlen(exit30->name) > 1) xtagAE->ext = exit30;
+					else xtagAE->ext = 0;
+				}
+				if (i == 29){
+					if (!xtagAE->ext) xtagAD->next_tag =0;
+					else xtagAD->next_tag = xtagAE;
+					if (exit29 && strlen(exit29->name) > 1) xtagAD->ext = exit29;
+					else xtagAD->ext = 0;
+				}
+				if (i == 28){
+					if (!xtagAD->ext) xtagAC->next_tag =0;
+					else xtagAC->next_tag = xtagAD;
+					if (exit28 && strlen(exit28->name) > 1) xtagAC->ext = exit28;
+					else xtagAC->ext = 0;
+				}
+				if (i == 27){
+					if (!xtagAC->ext) xtagAB->next_tag =0;
+					else xtagAB->next_tag = xtagAC;
+					if (exit27 && strlen(exit27->name) > 1) xtagAB->ext = exit27;
+					else xtagAB->ext = 0;
+				}
+				if (i == 26){
+					if (!xtagAB->ext) xtagAA->next_tag =0;
+					else xtagAA->next_tag = xtagAB;
+					if (exit26 && strlen(exit26->name) > 1) xtagAA->ext = exit26;
+					else xtagAA->ext = 0;
+				}
+				if (i == 25){
+					if (!xtagAA->ext) xtagZ->next_tag =0;
+					else xtagZ->next_tag = xtagAA;
+					if (exit25 && strlen(exit25->name) > 1) xtagZ->ext = exit25;
+					else xtagZ->ext = 0;
+				}
+				if (i == 24){
+					if (!xtagZ->ext) xtagY->next_tag =0;
+					else xtagY->next_tag = xtagZ;
+					if (exit24 && strlen(exit24->name) > 1) xtagY->ext = exit24;
+					else xtagY->ext = 0;
+				}
+				if (i == 23){
+					if (!xtagY->ext) xtagX->next_tag =0;
+					else xtagX->next_tag = xtagY;
+					if (exit23 && strlen(exit23->name) > 1) xtagX->ext = exit23;
+					else xtagX->ext = 0;
+				}
+				if (i == 22){
+					if (!xtagX->ext) xtagW->next_tag =0;
+					else xtagW->next_tag = xtagX;
+					if (exit22 && strlen(exit22->name) > 1) xtagW->ext = exit22;
+					else xtagW->ext = 0;
+				}
+				if (i == 21){
+					if (!xtagW->ext) xtagV->next_tag =0;
+					else xtagV->next_tag = xtagW;
+					if (exit21 && strlen(exit21->name) > 1) xtagV->ext = exit21;
+					else xtagV->ext = 0;
+				}
+				if (i == 20){
+					if (!xtagV->ext) xtagU->next_tag =0;
+					else xtagU->next_tag = xtagV;
+					if (exit20 && strlen(exit20->name) > 1) xtagU->ext = exit20;
+					else xtagU->ext = 0;
+				}
+				if (i == 19){
+					if (!xtagU->ext) xtagT->next_tag =0;
+					else xtagT->next_tag = xtagU;
+					if (exit19 && strlen(exit19->name) > 1) xtagT->ext = exit19;
+					else xtagT->ext = 0;
+				}
+				if (i == 18){
+					if (!xtagT->ext) xtagS->next_tag =0;
+					else xtagS->next_tag = xtagT;
+					if (exit18 && strlen(exit18->name) > 1) xtagS->ext = exit18;
+					else xtagS->ext = 0;
+				}
+				if (i == 17){
+					if (!xtagS->ext) xtagR->next_tag =0;
+					else xtagR->next_tag = xtagS;
+					if (exit17 && strlen(exit17->name) > 1) xtagR->ext = exit17;
+					else xtagR->ext = 0;
+				}
+				if (i == 16){
+					if (!xtagR->ext) xtagQ->next_tag =0;
+					else xtagQ->next_tag = xtagR;
+					if (exit16 && strlen(exit16->name) > 1) xtagQ->ext = exit16;
+					else xtagQ->ext = 0;
+				}
+				if (i == 15){
+					if (!xtagQ->ext) xtagP->next_tag =0;
+					else xtagP->next_tag = xtagQ;
+					if (exit15 && strlen(exit15->name) > 1) xtagP->ext = exit15;
+					else xtagP->ext = 0;
+				}
+				if (i == 14){
+					if (!xtagP->ext) xtagO->next_tag =0;
+					else xtagO->next_tag = xtagP;
+					if (exit14 && strlen(exit14->name) > 1) xtagO->ext = exit14;
+					else xtagO->ext = 0;
+				}
+				if (i == 13){
+					if (!xtagO->ext) xtagN->next_tag =0;
+					else xtagN->next_tag = xtagO;
+					if (exit13 && strlen(exit13->name) > 1) xtagN->ext = exit13;
+					else xtagN->ext = 0;
+				}
+				if (i == 12){
+					if (!xtagN->ext) xtagM->next_tag =0;
+					else xtagM->next_tag = xtagN;
+					if (exit12 && strlen(exit12->name) > 1) xtagM->ext = exit12;
+					else xtagM->ext = 0;
+				}
+				if (i == 11){
+					if (!xtagM->ext) xtagL->next_tag =0;
+					else xtagL->next_tag = xtagM;
+					if (exit11 && strlen(exit11->name) > 1) xtagL->ext = exit11;
+					else xtagL->ext = 0;
+				}
+				if (i == 10){
+					if (!xtagL->ext) xtagK->next_tag =0;
+					else xtagK->next_tag = xtagL;
+					if (exit10 && strlen(exit10->name) > 1) xtagK->ext = exit10;
+					else xtagK->ext = 0;
+				}
+				if (i == 9){
+					if (!xtagK->ext) xtagJ->next_tag =0;
+					else xtagJ->next_tag = xtagK;
+					if (exit9 && strlen(exit9->name) > 1) xtagJ->ext = exit9;
+					else xtagJ->ext = 0;
+				}
+				if (i == 8){
+					if (!xtagJ->ext) xtagI->next_tag =0;
+					else xtagI->next_tag = xtagJ;
+					if (exit8 && strlen(exit8->name) > 1) xtagI->ext = exit8;
+					else xtagI->ext = 0;
+				}
 				if (i == 7){
-					xtagA->next_tag = 0;
-					if (exit7 && strlen(exit7->name) > 1) xtagA->ext = exit7;
-					else xtagA->ext = 0;
+					if (!xtagI->ext) xtagH->next_tag =0;
+					else xtagH->next_tag = xtagI;
+					if (exit7 && strlen(exit7->name) > 1) xtagH->ext = exit7;
+					else xtagH->ext = 0;
 				}
 				if (i == 6){
-					if (!xtagA->ext) xtagB->next_tag =0;
-					else xtagB->next_tag = xtagA;
-					if (exit6 && strlen(exit6->name) > 1) xtagB->ext = exit6;
-					else xtagB->ext = 0;
-				}
-				if (i == 5){
-					if (!xtagB->ext) xtagC->next_tag =0;
-					else xtagC->next_tag = xtagB;
-					if (exit5 && strlen(exit5->name) > 1) xtagC->ext = exit5;
-					else xtagC->ext = 0;
-				}
-				if (i == 4){
-					if (!xtagC->ext) xtagD->next_tag =0;
-					else xtagD->next_tag = xtagC;
-					if (exit4 && strlen(exit4->name) > 1) xtagD->ext = exit4;
-					else xtagD->ext = 0;
-				}
-				if (i == 3){
-					if (!xtagD->ext) xtagE->next_tag =0;
-					else xtagE->next_tag = xtagD;
-					if (exit3 && strlen(exit3->name) > 1) xtagE->ext = exit3;
-					else xtagE->ext = 0;
-				}
-				if (i == 2){
-					if (!xtagE->ext) xtagF->next_tag =0;
-					else xtagF->next_tag = xtagE;
-					if (exit2 && strlen(exit2->name) > 1) xtagF->ext = exit2;
-					else xtagF->ext = 0;
-				}
-				if (i == 1){
-					if (!xtagF->ext) xtagG->next_tag =0;
-					else xtagG->next_tag = xtagF;
-					if (exit1 && strlen(exit1->name) > 1) xtagG->ext = exit1;
+					if (!xtagH->ext) xtagG->next_tag =0;
+					else xtagG->next_tag = xtagH;
+					if (exit6 && strlen(exit6->name) > 1) xtagG->ext = exit6;
 					else xtagG->ext = 0;
 				}
+				if (i == 5){
+					if (!xtagG->ext) xtagF->next_tag =0;
+					else xtagF->next_tag = xtagG;
+					if (exit5 && strlen(exit5->name) > 1) xtagF->ext = exit5;
+					else xtagF->ext = 0;
+				}
+				if (i == 4){
+					if (!xtagF->ext) xtagE->next_tag =0;
+					else xtagE->next_tag = xtagF;
+					if (exit4 && strlen(exit4->name) > 1) xtagE->ext = exit4;
+					else xtagE->ext = 0;
+				}
+				if (i == 3){
+					if (!xtagE->ext) xtagD->next_tag =0;
+					else xtagD->next_tag = xtagE;
+					if (exit3 && strlen(exit3->name) > 1) xtagD->ext = exit3;
+					else xtagD->ext = 0;
+				}
+				if (i == 2){
+					if (!xtagD->ext) xtagC->next_tag =0;
+					else xtagC->next_tag = xtagD;
+					if (exit2 && strlen(exit2->name) > 1) xtagC->ext = exit2;
+					else xtagC->ext = 0;
+				}
+				if (i == 1){
+					if (!xtagC->ext) xtagB->next_tag =0;
+					else xtagB->next_tag = xtagC;
+					if (exit1 && strlen(exit1->name) > 1) xtagB->ext = exit1;
+					else xtagB->ext = 0;
+				}
 				if (i == 0){
-					if (!xtagG->ext) xtagH->next_tag =0;
-					else xtagH->next_tag = xtagG;
-					if (exit0 && strlen(exit0->name) > 1) xtagH->ext = exit0;
-					else xtagH->ext = 0;
+					if (!xtagB->ext) xtagA->next_tag =0;
+					else xtagA->next_tag = xtagB;
+					if (exit0 && strlen(exit0->name) > 1) xtagA->ext = exit0;
+					else xtagA->ext = 0;
 				}					
 			}
 				//printf("setting the first_ext tag\n");
 				//xtagB = realloc(xtagB, sizeof(xtagA)+sizeof(rom_ptr->first_ext));
 				//xtagB->next_tag = rom_ptr->first_ext;
 				//xtagB->ext = xtagA->ext;		
-			rom_ptr->first_ext = xtagH;
+			rom_ptr->first_ext = xtagA;
 			//printf("death_rom: %s\n", array[182]);
 			rom_ptr->death_rom = (long)atoi(array[128]);
 
@@ -1817,7 +2622,7 @@ void convert_to_csv(){
 			}
 
 
-			fprintf(fpt,"%i;%s;%s;%s;%s;%s;%s;%s;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i\n",
+			fprintf(fpt,"%i;%s;%s;%s;%s;%s;%s;%s;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%s;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i;%i\n",
 			i, crt_ptr->name, crt_ptr->description, crt_ptr->talk, crt_ptr->password, crt_ptr->key[0], crt_ptr->key[1], crt_ptr->key[2], crt_ptr->fd, crt_ptr->level, crt_ptr->type, crt_ptr->class, crt_ptr->race, crt_ptr->numwander, crt_ptr->alignment, crt_ptr->strength, crt_ptr->dexterity, crt_ptr->constitution, crt_ptr->intelligence, crt_ptr->piety, crt_ptr->hpmax, crt_ptr->hpcur, crt_ptr->mpmax, crt_ptr->mpcur, crt_ptr->armor, crt_ptr->thaco, crt_ptr->experience, crt_ptr->gold, crt_ptr->ndice, crt_ptr->sdice, crt_ptr->pdice, crt_ptr->special, crt_ptr->proficiency[0], crt_ptr->proficiency[1], crt_ptr->proficiency[2], crt_ptr->proficiency[3], crt_ptr->proficiency[4], crt_ptr->proficiency[5], crt_ptr->realm[0], crt_ptr->realm[1], crt_ptr->realm[2], crt_ptr->realm[3], crt_ptr->realm[4], crt_ptr->realm[5], crt_ptr->realm[6], crt_ptr->realm[7], spells0, spells1, spells2, spells3, spells4, spells5, spells6, spells7, spells8, spells9, spells10, spells11, spells12, spells13, spells14, spells15, flags0, flags1, flags2, flags3, flags4, flags5, flags6, flags7, flags8, flags9, flags10, flags11, flags12, flags13, flags14, flags15, quests0, quests1, quests2, quests3, quests4, quests5, quests6, quests7, quests8, quests9, quests10, quests11, quests12, quests13, quests14, quests15, crt_ptr->questnum, crt_ptr->carry[0], crt_ptr->carry[1], crt_ptr->carry[2], crt_ptr->carry[3], crt_ptr->carry[4], crt_ptr->carry[5], crt_ptr->carry[6], crt_ptr->carry[7], crt_ptr->carry[8], crt_ptr->carry[9], crt_ptr->rom_num, crt_ptr->bank_balance, crt_ptr->title, crt_ptr->misc_stats[0], crt_ptr->misc_stats[1], crt_ptr->misc_stats[2], crt_ptr->misc_stats[3], crt_ptr->misc_stats[4], crt_ptr->clanindex, crt_ptr->clanexp, crt_ptr->guildtype, crt_ptr->guildexp, crt_ptr->special1, crt_ptr->special2 );
 			}
 			else {
@@ -2219,7 +3024,11 @@ void convert_to_csv(){
 						
 							strcat(exitstr, ", ");
 						}
-					
+						//13/04/2022 add in random_message
+						//for objectives checking
+						strcat(exitstr, xt->ext->rand_mesg[0]);
+						strcat(exitstr, ", ");
+						strcat(exitstr, xt->ext->rand_mesg[1]);
 				
 						strcat(exitstr, ";");
 					}

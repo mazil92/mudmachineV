@@ -319,6 +319,16 @@
 #define MDEALSMAGIC		73  /**/
 #define MDEALSDIVINE	74  /**/
 
+#define MOBJECTIVESEE	75 
+#define MMULTIOBJSEE	76
+#define MMULTIOBJABOVE	77
+#define MMULTIOBJBELOW	78
+#define MINVERTEDOBJ	79 // inverted objective requirements
+#define MPREMPTIVEOBJ	80 // alters requirements to judge what the multiobjective WOULD be before completion
+
+#define MDEATHOBJECTIVE 81
+#define MDEATHMULTIOBJ 	82
+
 /* Object flags */
 #define OPERMT          0       /* Permanent item (not yet taken) */
 #define OHIDDN          1       /* Hidden */
@@ -386,12 +396,12 @@
 
 #define OGIVESAC	63	/* armor item grants its armor value to AC*/
 #define OGIVESDR	64	/* armor item grants is armor value to DR*/
-#define OBONUS1DAMAGE 	65	/* weapon item deals bonus damage based on realm and special*/
-#define OBONUS2DAMAGE	66	/* weapon item deals bonus damage based on special1 and special2*/
+#define OBREAKSONPICKUP 	65	/* item is immediately destroyed upon pickup - just for quest and objectives*/
+#define ONOTGIVEN	66	/* When traded, the monster doesn't give the item - only the quest/objective*/
 #define ONOPHYSICAL		67	/* weapon item does no deal physical damage, only bonus1/2*/
-#define ORESIST1	68	/* armor item grants resistance based on realm and special*/
-#define ORESIST2	69	/* armor item grants resistance based on special1 and special2*/
-/*I think These above 7 flags are made redundant by 75 and 76*/
+
+#define OSINGLEOBJ	68	/* This item grants a single objective when picked up based on sets_flag[15]*/
+#define OMULTIOBJ	69	/* Multi-Objective defined by sets_flag[14]*/
 
 #define OREQUIRESSTR	70	/* wearable item requries str equal to assigned value*/
 #define OREQUIRESDEX	71	/* as above but for dex*/
@@ -402,7 +412,12 @@
 #define OGRANTSRESIST	75	/*armor item grants resistance according to the sets_flags array*/
 #define OCUSTOMDAMAGE	76	/*weapon item deals various damage types according to the same aray
 Please don't use either of these flags in conjunction with the sets flags flag*/
-
+#define OOBJECTIVESEE	77
+#define OMULTIOBJSEE	78
+#define OMULTIOBJABOVE	79
+#define OMULTIOBJBELOW	80
+#define OINVERTEDOBJ	81 // inverted objective requirements
+#define OPREMTPIVEOBJ	82 // alters requirements to judge what the multiobjective WOULD be before completion
 
 /* Exit flags */
 #define XSECRT          0       /* Secret */
@@ -425,28 +440,35 @@ Please don't use either of these flags in conjunction with the sets flags flag*/
 #define XDAYON          17      /* only open during day */
 #define XPGUAR          18      /* passive guarded exit */
 #define XNOSEE          19      /* Can not use / see exit */
-#define XPLSEL		20	/* Class selective exit */
-#define XPASSN		21
-#define XPBARB		22	
-#define XPCLER		23
-#define XPFGHT		24
-#define XPMAGE		25
-#define XPPALA		26
-#define XPRNGR		27
-#define XPTHEF		28
-#define XPBARD		29
-#define XPMONK		30
-#define XPDRUD		31
-#define XPALCH		32
+#define XPLSEL			20	/* Class selective exit */
+#define XPASSN			21
+#define XPBARB			22	
+#define XPCLER			23
+#define XPFGHT			24
+#define XPMAGE			25
+#define XPPALA			26
+#define XPRNGR			27
+#define XPTHEF			28
+#define XPBARD			29
+#define XPMONK			30
+#define XPDRUD			31
+#define XPALCH			32
 #define XBUILD          33
 #define XGILDA          34      /*   GUILD   100 Circle 010 Masters  001 Brotherhood */
 #define XGILDB          35      /*   FLAGS   110 Clan   101  Company 011  Guard */
 #define XGILDC          36      /*           111 Champs 000 Council */
-#define XRANDM		37	/* Random dissapear exit */
-#define XRANDB		38	/* rand dissapear which globally broads message */
-#define XRAND2		39
-#define XUNIQP		40	/* player selective exit - uses name of target room for strcmp to ply_ptr->name */
-
+#define XRANDM			37	/* Random dissapear exit */
+#define XRANDB			38	/* rand dissapear which globally broads message */
+#define XRAND2			39
+#define XUNIQP			40	/* player selective exit - uses name of target room for strcmp to ply_ptr->name */
+#define XOBJECTIVESEE  	41 /* requires that a player has completed the objective number declared in the random message of the exit*/
+#define XOBJECTIVEGO  	42 /* requires that a player has completed the objective number declared in the random message of the exit*/
+#define XMULTIOBJSEE 	43
+#define XMULTIOBJGO 	44
+#define XMULTIOBJABOVE 	45
+#define XMULTIOBJBELOW 	46
+#define XINVERTEDOBJECTIVE 	47 // inverted objective requirements
+#define XPREMPTIVEOBJECTIVE 48 // alters requirements to judge what the multiobjective WOULD be before completion
 
 /* Creature stats */
 #define STR             1
@@ -457,6 +479,7 @@ Please don't use either of these flags in conjunction with the sets flags flag*/
 
 
 /* Character classes */
+#define NEWBIE			0
 #define ASSASSIN        1
 #define BARBARIAN       2
 #define CLERIC          3

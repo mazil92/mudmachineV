@@ -100,10 +100,12 @@ int haste( creature *ply_ptr, cmd *cmnd )
 
 	fd = ply_ptr->fd;
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != RANGER && ply_ptr->class < BUILDER) {
 		output(fd, "Only rangers may use haste.\n");
 		return(0);
-	}
+	}*/
 
 	if(F_ISSET(ply_ptr, PHASTE)) {
 		output(fd, "You're already hastened.\n");
@@ -155,10 +157,12 @@ int berserk( creature *ply_ptr, cmd *cmnd )
 
 	fd = ply_ptr->fd;
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != BARBARIAN && ply_ptr->class < BUILDER) {
 		output(fd, "Only barbarians may berserk.\n");
 		return(0);
-	}
+	}*/
 
 	if(F_ISSET(ply_ptr, PBESRK)) {
 		output(fd, "You're already berserked.\n");
@@ -214,10 +218,12 @@ int barkskin( creature *ply_ptr, cmd *cmnd )
 
 	fd = ply_ptr->fd;
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != DRUID && ply_ptr->class < BUILDER) {
 		output(fd, "Only Druids may use barkskin.\n");
 		return(0);
-	}
+	}*/
 
 	if(F_ISSET(ply_ptr, PBARKS)) {
 		output(fd, "You already have barkskin.\n");
@@ -268,11 +274,13 @@ int pray( creature *ply_ptr, cmd *cmnd )
 
 	fd = ply_ptr->fd;
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != CLERIC && ply_ptr->class != PALADIN && 
 	   ply_ptr->class < BUILDER) {
 		output(fd, "Only clerics and paladins may pray.\n");
 		return(0);
-	}
+	}*/
 
 	if(F_ISSET(ply_ptr, PPRAYD)) {
 		output(fd, "You've already prayed.\n");

@@ -111,16 +111,21 @@ int cast(creature *ply_ptr, cmd *cmnd )
     if(n) {
 	   ply_ptr->lasttime[LT_READS].ltime = t;
        ply_ptr->lasttime[LT_SPELL].ltime = t;
-       if(ply_ptr->class == ALCHEMIST || ply_ptr->class == MAGE)
+       
+       //read cast interval from tier
+       //it already has considered ATTUNE
+       ply_ptr->lasttime[LT_SPELL].interval = get_cast_speed(ply_ptr);
+
+       /*if(ply_ptr->class == ALCHEMIST || ply_ptr->class == MAGE)
             ply_ptr->lasttime[LT_SPELL].interval = 3;
        else if(ply_ptr->class == BARD || ply_ptr->class == CLERIC || ply_ptr->class == DRUID)
 	   ply_ptr->lasttime[LT_SPELL].interval = 4;
 	   else
             ply_ptr->lasttime[LT_SPELL].interval = 5;
     
-    if (F_ISSET(ply_ptr, PATTUNE)){
-        ply_ptr->lasttime[LT_SPELL].interval -= 1;
-    }
+        if (F_ISSET(ply_ptr, PATTUNE)){
+            ply_ptr->lasttime[LT_SPELL].interval -= 1;
+        }*/
     }
 
     return(0);
@@ -156,10 +161,12 @@ int teach(creature *ply_ptr, cmd *cmnd )
 		return(0);
     }
 
+    /*23/04/2022 class restrictions removed by smithy
+    skilltrees now account for permission to use skills
     if((ply_ptr->class != MAGE && ply_ptr->class != CLERIC) && ply_ptr->class < BUILDER)  {
         output(fd, "Only mages and clerics may teach spells.\n");
         return(0);
-    }
+    }*/
 
     cmnd->str[1][0] = up(cmnd->str[1][0]);
     crt_ptr = find_crt(ply_ptr, rom_ptr->first_ply, cmnd->str[1], 

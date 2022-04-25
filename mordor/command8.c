@@ -349,11 +349,13 @@ int circle( creature *ply_ptr, cmd *cmnd )
 		return(0);
 	}
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != FIGHTER && ply_ptr->class != BARBARIAN &&
 	   ply_ptr->class < BUILDER) {
 		output(fd, "Only barbarians and fighters may circle.\n");
 		return(0);
-	}
+	}*/
 
 	crt_ptr = find_crt_in_rom(ply_ptr, rom_ptr,
 			   cmnd->str[1], cmnd->val[1], MON_FIRST);
@@ -479,11 +481,13 @@ int bash( creature *ply_ptr, cmd *cmnd )
 		return(0);
 	}
 
+	/*23/04/2022 class restrictions removed by smithy
+	skilltrees now account for permission to use skills
 	if(ply_ptr->class != FIGHTER && ply_ptr->class != BARBARIAN &&
 	   ply_ptr->class < BUILDER) {
 		output(fd, "Only barbarians and fighters may bash.\n");
 		return(0);
-	}
+	}*/
 
 	crt_ptr = find_crt_in_rom(ply_ptr, rom_ptr, cmnd->str[1], cmnd->val[1],
 		MON_FIRST);
@@ -831,7 +835,7 @@ int talk( creature *ply_ptr, cmd *cmnd )
 			int 	index =0, num =0,i, n;
 			char	*word[4];
 			char 	keystring[80];
-			char 	attribute[10] = "";
+			char 	attribute[14] = "";
 			char 	operand[6] = "";
 			char 	value[10] = "";	
 			
@@ -877,10 +881,13 @@ int talk( creature *ply_ptr, cmd *cmnd )
 				
 				strcat(word[1], "\0");
 				strcpy(attribute, word[1]);
+				//elog(word[1]);
 				strcat(word[2], "\0");
 				strcpy(operand, word[2]);
+				//elog(word[2]);
 				strcat(word[3], "\0");
 				strcpy(value, word[3]);
+				//elog(word[3]);
 				/*output(fd, "outputting attribute:");
 				output(fd, attribute);
 				output(fd, "\n");
@@ -892,7 +899,34 @@ int talk( creature *ply_ptr, cmd *cmnd )
 				output(fd, "\n");*/
 			}
 		//now we can resume the normal code
-			if(!strcmp(cmnd->str[2], word[0]) && (conditionsmet(ply_ptr, attribute, operand, value) || !word[1])) {
+			//elog("this is before comparing a stat for a talkfile\n");
+			if (!strcmp(cmnd->str[2], word[0])){
+				if (word[1]){
+					//elog("we have to run conditionsmet");
+					if (conditionsmet(ply_ptr, attribute, operand, value)){
+						sprintf(g_buffer, "%%M says to %%M, \"%s\".", tp->response);
+						broadcast_rom(fd, ply_ptr->rom_num,	g_buffer, 
+							m2args( crt_ptr, ply_ptr ));
+
+						sprintf(g_buffer, "%%M says to you, \"%s\"\n", tp->response);
+						mprint(fd, g_buffer, m1arg(crt_ptr));
+						talk_action(ply_ptr, crt_ptr, tp);
+						return(0);
+					}
+				}
+				else{
+					sprintf(g_buffer, "%%M says to %%M, \"%s\".", tp->response);
+					broadcast_rom(fd, ply_ptr->rom_num,	g_buffer, 
+						m2args( crt_ptr, ply_ptr ));
+
+					sprintf(g_buffer, "%%M says to you, \"%s\"\n", tp->response);
+					mprint(fd, g_buffer, m1arg(crt_ptr));
+					talk_action(ply_ptr, crt_ptr, tp);
+					return(0);
+				}
+			}
+
+			/*if(!strcmp(cmnd->str[2], word[0]) && (conditionsmet(ply_ptr, attribute, operand, value) || !word[1])) {
 				sprintf(g_buffer, "%%M says to %%M, \"%s\".", tp->response);
 				broadcast_rom(fd, ply_ptr->rom_num,	g_buffer, 
 					m2args( crt_ptr, ply_ptr ));
@@ -901,7 +935,7 @@ int talk( creature *ply_ptr, cmd *cmnd )
 				mprint(fd, g_buffer, m1arg(crt_ptr));
 				talk_action(ply_ptr, crt_ptr, tp);
 				return(0);
-			}
+			}*/
 			tp = tp->next_tag;
 		}
 		broadcast_rom(-1, ply_ptr->rom_num, "%M shrugs.", m1arg(crt_ptr));
@@ -928,6 +962,8 @@ cmd		cm;
 int 	i, n,splno =0;
 object  *obj_ptr;
 int		(*fn)();
+char tempstr[5];
+int j, k;
 
 for (i = 0; i < COMMANDMAX;i++){
 	cm.str[i][0] = 0;
@@ -942,7 +978,9 @@ switch(tt->type){
 		add_enm_crt(ply_ptr->name, crt_ptr);
 		broadcast_rom(ply_ptr->fd, ply_ptr->rom_num,
 					"%M attacks %M\n", m2args(crt_ptr,ply_ptr));
+		ANSI(ply_ptr->fd, AFC_RED);
 		mprint(ply_ptr->fd,"%M attacks you.\n", m1arg(crt_ptr));
+		ANSI(ply_ptr->fd, AFC_WHITE);
 		break;
 
 	case 2:				/*action command */
@@ -1023,6 +1061,19 @@ switch(tt->type){
 				   break;
                }    
 
+               if(obj_ptr->sets_flag[15] && (F_ISSET(obj_ptr, OSINGLEOBJ))){
+               	 broadcast_rom(ply_ptr->fd, ply_ptr->rom_num, "%M tells %m a secret\n", m2args(crt_ptr,ply_ptr));
+               	 if (!objective_item_pickup(ply_ptr, obj_ptr)){
+               	 	break;
+               	 }	
+               }
+               else if(obj_ptr->sets_flag[15] && (F_ISSET(obj_ptr, OMULTIOBJ))){
+               	 broadcast_rom(ply_ptr->fd, ply_ptr->rom_num, "%M tells %m a secret\n", m2args(crt_ptr,ply_ptr));
+               	 if (!multi_objective_item_pickup(ply_ptr, obj_ptr)){
+               	 	break;
+               	 }	
+               }
+
 	            if(obj_ptr->questnum && Q_ISSET(ply_ptr, obj_ptr->questnum)) {
                     output(ply_ptr->fd, "You may not get that. You have already fulfilled that quest.\n");
 					break;
@@ -1036,11 +1087,17 @@ switch(tt->type){
 					 output(ply_ptr->fd, g_buffer );
    	                 add_prof(ply_ptr, get_quest_exp(obj_ptr->questnum));
    	             	} 
-                add_obj_crt(obj_ptr, ply_ptr);
-				mprint(ply_ptr->fd,"%M gives you %i\n",
+                
+                //new smithy flag. only give the item if you want 
+   	            //it to be given
+   	            //(useful for quest and objective items)
+                if (!F_ISSET(obj_ptr, ONOTGIVEN)){
+                	add_obj_crt(obj_ptr, ply_ptr);
+					mprint(ply_ptr->fd,"%M gives you %i\n",
 					m2args(crt_ptr, obj_ptr));
-				broadcast_rom(ply_ptr->fd, ply_ptr->rom_num,
+					broadcast_rom(ply_ptr->fd, ply_ptr->rom_num,
 					"%M gives %m %i\n", m3args(crt_ptr,ply_ptr,obj_ptr));
+				}
 			}
 			else
 			{
@@ -1059,10 +1116,33 @@ switch(tt->type){
 			//give them a notification that their
 			//objectives have been updated
 			set_objective(ply_ptr, i);
-		}	
+		}		
+	break;
+
+	case 6: //MULTI-OBJECTIVES
+		//read the objective number off the talk pointer
 		
-		
-		break;
+		sprintf(tempstr, "%c%c%c%c", tt->action[0], tt->action[1], tt->action[2], tt->action[3]);
+		i = atoi(tempstr);
+		sprintf(tempstr, "%c%c%c%c", tt->action[4], tt->action[5], tt->action[6], tt->action[7]);
+		j = atoi(tempstr);
+		sprintf(tempstr, "%c%c%c%c", tt->action[8], tt->action[9], tt->action[10], tt->action[11]);
+		k = atoi(tempstr);
+
+		multi_objective(ply_ptr, i, j, k);	
+	break;
+	case 7: //SILENT OBJECTIVES
+		//read the objective number off the talk pointer
+		i = atoi(tt->action);
+
+		//check if the player has already done that one
+		if (!objective_check(ply_ptr, i)){
+			//if they haven't, grant it and
+			//give them a notification that their
+			//objectives have been updated
+			silent_objective(ply_ptr, i);
+		}		
+	break;
 	default:
 		break;
 	}
@@ -1092,6 +1172,7 @@ int objective_check(creature *ply_ptr, int objective){
 	//iterate through the file and load the values into 
 	//a handy array for future reading
 	c = 0;
+	result =0;
 	while (result != EOF){
 		result = fscanf(fpt, "%11[^,]", str);
 		result = fscanf(fpt, "%*c");
@@ -1119,6 +1200,7 @@ int set_objective(creature *ply_ptr, int objective){
 	char str[10] = {};
 	FILE *fpt;
 	
+	int fd = ply_ptr->fd;
 	//firstly check if they have done it already
 	//if they haven't, proceed
 	if (!objective_check(ply_ptr, objective)){
@@ -1135,9 +1217,20 @@ int set_objective(creature *ply_ptr, int objective){
 		fprintf(fpt, str);
 
 		//let the player know they done good
+		ANSI(fd, AFC_CYAN);
 		output(ply_ptr->fd, "\n Your objective log has been updated!");
 		output(ply_ptr->fd, "\n Type 'objectives' to read more");
  		output(ply_ptr->fd, "\n");
+ 		if (objective_exp(objective)){
+   			ANSI(fd, AM_BOLD);
+   			ply_ptr->experience += objective_exp(objective);
+   	        sprintf(g_buffer, " %ld experience granted.\n\n", objective_exp(objective));
+			output(ply_ptr->fd, g_buffer );
+			add_prof(ply_ptr, objective_exp(objective));
+   		}
+   		ANSI(fd, AM_NORMAL);
+   		ANSI(fd, AFC_WHITE);
+
 		//close the file
 		fclose(fpt);
 	}
@@ -1156,7 +1249,7 @@ int conditionsmet(creature *ply_ptr, char *attribute, char *operand, char *value
 	int ret =0;
 	int stat =0;
 
-	//output(ply_ptr->fd, "comparing a stat for a talkfile\n");
+	//elog("running conditionsmet");
 		
 	//consider what attribute the talk string is asking for
 	// and place that value into the "stat" variable
@@ -1211,7 +1304,42 @@ int conditionsmet(creature *ply_ptr, char *attribute, char *operand, char *value
 		} 
 		else stat = -1;
 	}
+	if (!strcmp(attribute, "MULTIOBJABOVE") || !strcmp(attribute, "MULTIOBJBELOW")){
+		//find out which one of the objectives in that multi-series they completed
+		//elog("multiobjective dependent talkfile activated");
+		if (objective_check(ply_ptr, atoi(value))){
+			int obj;
+			int i, j;
+			for (i=1, j=0; i<10; i++){
+				if (objective_check(ply_ptr, atoi(value)+i)){
+					obj = atoi(value) +i;
+					j++;
+					//elog("they've done the objective");
 
+				}
+			}
+			//they did the objective but after the first 9
+			if (j==0){
+				obj = atoi(value)+10;
+			}
+			if (!strcmp(attribute, "MULTIOBJABOVE")){
+				//elog("trying to compare values above");
+				if(atoi(operand) < obj){
+					ret = 1;
+				}
+			}
+			if (!strcmp(attribute, "MULTIOBJBELOW")){
+				//elog("trying to compare values below");
+				if(atoi(operand) > obj){
+					ret = 1;
+				}
+			}
+		} 		
+		//elog("all done");
+	}	
+	//else (ret = 0);
+	
+	
 	//consider what OPERAND is being called and then compare
 	//the stat and the value to determine success
 	if (!strcmp(operand,"ABOVE")){

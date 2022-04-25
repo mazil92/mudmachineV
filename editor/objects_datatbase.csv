@@ -1,5 +1,5 @@
 ID; name; description; key0; key1; key2; use; value; weight; type; adjustment; shotsmax; shotscur; ndice; sdice; pdice; armor; wearflag; magicpower; magicrealm; special; flags0; flags1; flags2; flags3; flags4; flags5; flags6; flags7; flags8; flags9; flags10; flags11; flags12; flags13; flags14; flags15; questnum; strength; dexterity; constitution; intelligence; piety; sets_flag0; sets_flag1; sets_flag2; sets_flag3; sets_flag4; sets_flag5; sets_flag6; sets_flag7; sets_flag8; sets_flag9; sets_flag10; sets_flag11; sets_flag12; sets_flag13; sets_flag14; sets_flag15; special1; special2
-0;gold pieces;My, how it glitters.;gold;coins;money;;1;1;10;0;1;1;0;0;0;0;0;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+0;gold;My, how it glitters;gold;cash;money;;1;0;10;10;0;0;50;1;1;1;12;1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1;small knife;It has a sharp, pointy tip.;knife;;;;5;2;0;0;30;30;1;5;0;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 2;godentag;;;;;;100;5;2;0;40;40;1;5;0;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 3;short sword;;sword;;;;50;4;1;0;25;25;1;6;0;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
@@ -19,7 +19,7 @@ ID; name; description; key0; key1; key2; use; value; weight; type; adjustment; s
 17;leather pants;;pants;;;;40;3;5;0;25;25;0;0;0;2;3;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 18;leather boots;;boots;;;;47;4;5;0;25;25;0;0;0;2;8;0;0;0;4;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 19;large wooden shield;;wooden;shield;;;75;7;5;0;25;25;0;0;0;3;18;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-20;hand axe;;axe;;;;50;5;0;0;30;30;1;5;1;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+20;hand axe;;axe;;;;50;5;0;0;30;30;1;5;1;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;11;0;0;0;0;0;0;0;0;0;0;0;0;0;1
 21;sledgehammer;;hammer;;;;44;8;2;0;40;40;1;4;1;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 22;lancette;;;;;;110;7;1;0;38;38;2;3;0;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 23;bo stick;;stick;;;;68;4;3;0;40;40;2;3;0;0;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
@@ -681,7 +681,7 @@ ID; name; description; key0; key1; key2; use; value; weight; type; adjustment; s
 679;ruby key;The ruby key will unlock the training room door, but only once.;key;;;click.;1000;1;11;0;1;1;80;0;0;0;17;0;0;0;15;16;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 680;drow crossbow;The drow crossbow is legdanary for it's great range and powerful bolts.;drow;crossbow;;;6000;3;4;1;65;65;1;7;7;0;20;0;0;0;14;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 681;drow chain mail;The tightly interlocking black rings provide excellent protection.;chain;drow;;;1800;10;5;0;45;45;0;0;0;16;1;0;0;0;14;20;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-682;drow assassin mask;The mask appears to be constructed from a magic faberic only know to drow elvesïmask;mask;drow;assassin;;2500;3;5;0;30;30;0;0;0;3;19;0;0;0;12;14;16;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+682;drow assassin mask;The mask appears to be constructed from a magic faberic only know to drow elves?mask;mask;drow;assassin;;2500;3;5;0;30;30;0;0;0;3;19;0;0;0;12;14;16;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 683;drow short sword;;drow;sword;short;;5000;5;1;2;100;100;5;3;0;0;20;0;0;0;14;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 684;poison dart;;;;;;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 685;drow dart;;;;;;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
@@ -851,7 +851,7 @@ ID; name; description; key0; key1; key2; use; value; weight; type; adjustment; s
 1065;;;;;;;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1066;;;;;;;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1067;log of wood;A hunk of wood cut from a mighty forest tree;log;wood;;Probably better to burn it than just hold it lol;150;7;13;0;1;1;1;1;1;0;17;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-1068;deck of cards;A worn deck of playing cards. Still got all 52 ;deck;cards;;Baby, the ace is high and I'm holding all the hearts ;);150;1;13;0;1;1;1;1;1;0;17;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+1068;deck of cards;A worn deck of playing cards. Still got all 52 ;deck;cards;;Baby, the ace is high and I'm holding all the hearts ;0;150;1;13;0;0;1;1;1;1;0;17;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1069;deer pelt;A pelt of fur salvaged from a wild deer;deer;pelt;;Maybe it would be better fashioned into a coat?;150;4;13;0;1;1;1;1;1;0;17;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1070;bear claws;A severed hand salvaged from a wild bear;bear;claws;;Maybe this would be better fashioned into a glove?;150;4;13;0;1;1;1;1;1;0;17;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1071;forest spirit rock;A magic rock stolen from a forest spirit;forest;spirit;rock;CRACK;150;2;8;0;3;3;1;1;1;0;17;33;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
@@ -883,3 +883,4 @@ ID; name; description; key0; key1; key2; use; value; weight; type; adjustment; s
 1097;potion of unending breath;A peculiar blue potion that promises more air;potion;unending;breath;Slurp;150;1;6;0;1;1;1;1;1;0;17;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1098;raider's shield;A cast-iron shield designed to resist a clobbering;raider;shield;;Yarrrr.;3500;18;5;0;50;50;1;1;1;14;18;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 1099;exquisite linen sleeves;Expensive white linen that repels desert heat;exquisite;linen;sleeves;You feel like a desert prince!;3500;5;5;0;50;50;1;1;1;12;1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+1100;objective test;Here's a hint for your next objetive;test;;;go where the air is cold and the breeze is fresh;3500;5;5;0;50;50;1;1;1;12;1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;220;210;230

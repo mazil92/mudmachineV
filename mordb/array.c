@@ -107,7 +107,7 @@ static char lev_title_dolls[][8][20] = {
 */
 
 static char lev_title_guys[][8][21] = {
-        { "", "", "", "", "", "", "", "" },
+        { "Student", "", "", "", "", "", "", "" },
         { "Prowler", "Brawler", "Cutthroat", "Killer",
           "Butcher", "Murderer", "Executioner", "Dark Lord" },
         { "Tribesman", "Berserker", "Brutalizer", "Pillager",
@@ -140,7 +140,7 @@ static char lev_title_guys[][8][21] = {
 };
 
 static char lev_title_dolls[][8][21] = {
-        { "", "", "", "", "", "", "", "" },
+        { "Student", "", "", "", "", "", "", "" },
         { "Prowler", "Lurker", "Stalker", "Viper",
           "Blade", "Murderess", "Femme Fatale", "Dark Mistress" },
         { "Tribeswoman", "Berserker Maiden", "Amazon", "Tigress",
